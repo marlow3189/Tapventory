@@ -55,12 +55,13 @@ test('powierzchnia RPC: dokładnie te funkcje są wykonywalne przez zalogowanych
     'can_invite_role', 'can_manage', 'can_manage_billing', 'can_manage_managers',
     'is_member', 'is_owner', 'is_valid_nip', 'my_role', 'owners_count', 'path_tenant',
     'shares_tenant_with',
-    'normalize_name', 'paths_in_tenant',
+    'normalize_name', 'paths_in_tenant', 'plan_limits',
     // RPC wołane przez aplikację
-    'accept_invite', 'accept_invite_code', 'create_invite', 'create_photo_document', 'create_tenant',
-    'delete_account', 'delete_tenant', 'get_invite_preview', 'match_products', 'post_document',
-    'retry_document', 'revoke_invite', 'set_billing_flag', 'set_manager_flag', 'set_tenant_nip',
-    'unpost_document',
+    'accept_invite', 'accept_invite_code', 'ai_quota', 'create_invite', 'create_photo_document',
+    'create_tenant', 'dashboard_summary', 'delete_account', 'delete_tenant', 'get_invite_preview',
+    'match_products', 'next_count_candidates', 'post_document', 'record_stock_check',
+    'register_push_token', 'retry_document', 'revoke_invite', 'set_billing_flag',
+    'set_manager_flag', 'set_tenant_nip', 'should_ask_count', 'unpost_document',
   ].sort();
   const rows = await q(`
     select p.proname from pg_proc p
@@ -77,12 +78,14 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
   // Uprawnienia tabelowe = „co w ogóle wolno spróbować"; RLS zawęża je do właściwych
   // wierszy. Zmiana tej macierzy musi być świadoma (patrz docs/03_ARCHITEKTURA_I_BEZPIECZENSTWO.md).
   const expected = {
+    ai_usage: 'SELECT',
     audit_log: 'SELECT',
     catalog_items: 'SELECT',
     document_lines: 'DELETE,INSERT,SELECT,UPDATE',
     document_overview: 'SELECT',
     documents: 'DELETE,INSERT,SELECT,UPDATE',
     memberships: 'DELETE,SELECT',            // + UPDATE tylko na 3 kolumnach (niżej)
+    notifications: 'SELECT',                 // + UPDATE tylko read_at
     movement_feed: 'SELECT',
     product_overview: 'SELECT',
     product_stock: 'SELECT',
@@ -90,6 +93,7 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
     products: 'DELETE,INSERT,SELECT,UPDATE',
     profiles: 'SELECT',                       // + UPDATE tylko display_name, phone
     projects: 'DELETE,INSERT,SELECT,UPDATE',
+    push_tokens: 'DELETE,SELECT',
     referral_codes: 'SELECT',
     referrals: 'SELECT',
     request_messages: 'INSERT,SELECT',
@@ -99,9 +103,11 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
     request_message_feed: 'SELECT',
     requests: 'INSERT,SELECT,UPDATE',          // bez DELETE: zgłoszeń się nie kasuje
     reward_ledger: 'SELECT',
+    stock_checks: 'SELECT',
     stock_movements: 'INSERT,SELECT',
     suppliers: 'DELETE,INSERT,SELECT,UPDATE',
     team_invites: 'SELECT',
+    tenant_settings: 'SELECT,UPDATE',
     team_members: 'SELECT',
     tenants: 'SELECT',                        // + UPDATE tylko na danych kontaktowych
   };
@@ -126,6 +132,7 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
     group by c.relname order by 1`);
   assert.deepEqual(Object.fromEntries(cols.map((r) => [r.relname, r.cols])), {
     memberships: 'can_manage_billing,can_manage_managers,role',
+    notifications: 'read_at',
     profiles: 'display_name,phone',
     tenants: 'address_line,city,industry,lat,lng,name,postal_code',
   });

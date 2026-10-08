@@ -81,6 +81,7 @@ export async function createTestDb({ upTo, seed = true } = {}) {
 
   const ctx = {
     name,
+    url: url.toString(),
     admin: db,
     applied,
     async drop() {
