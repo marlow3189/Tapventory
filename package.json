@@ -10,9 +10,16 @@
   "scripts": {
     "db:test": "node --test \"supabase/tests/*.test.mjs\"",
     "fn:test": "node --test \"supabase/functions/tests/*.test.ts\"",
-    "fn:typecheck": "mobile/node_modules/.bin/tsc -p supabase/functions/tsconfig.json"
+    "fn:typecheck": "mobile/node_modules/.bin/tsc -p supabase/functions/tsconfig.json",
+    "eval:generate": "node eval/generate.mjs",
+    "eval:run": "node eval/run.mjs",
+    "eval:dry": "node eval/run.mjs --dry",
+    "eval:test": "node --test \"eval/tests/*.test.ts\"",
+    "eval:typecheck": "mobile/node_modules/.bin/tsc -p eval/tsconfig.json"
   },
   "devDependencies": {
-    "pg": "^8.23.1"
+    "@anthropic-ai/sdk": "0.127.0",
+    "pg": "^8.23.1",
+    "playwright": "1.56.1"
   }
 }

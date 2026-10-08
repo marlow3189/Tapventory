@@ -238,10 +238,17 @@ export function verifyExtraction(n: Normalized): Issue[] {
   const issues: Issue[] = [];
   const add = (code: string, severity: Severity, weight: number, text: string) => issues.push({ code, severity, weight, text });
 
+  // „To nie dokument zakupu" (model uznał, że na zdjęciu jest coś innego): jedno wyraźne ostrzeżenie zamiast lawiny
+  // błędów — i żadnego drugiego, droższego odczytu, bo mocniejszy model nie wyczaruje faktury ze zdjęcia grilla.
+  if (n.doc_kind === 'other' && n.lines.length === 0) {
+    add('not_a_document', 'warn', 5, 'To nie wygląda na fakturę ani paragon — sprawdź, czy zrobiono zdjęcie właściwego dokumentu.');
+    return issues;
+  }
   if (n.lines.length === 0) add('no_lines', 'error', 10, 'Nie odczytano żadnej pozycji.');
   if (!n.supplier_nip) add('no_nip', 'warn', 2, 'Brak NIP dostawcy.');
   else if (!isValidNip(n.supplier_nip)) add('bad_nip', 'error', 6, 'NIP dostawcy ma błędną sumę kontrolną — możliwa pomyłka odczytu cyfry.');
-  if (!n.invoice_number) add('no_number', 'warn', 3, 'Brak numeru faktury.');
+  // paragon nie ma numeru faktury — brak numeru to jego cecha, nie błąd odczytu
+  if (!n.invoice_number && n.doc_kind !== 'receipt') add('no_number', 'warn', 3, 'Brak numeru faktury.');
   if (!n.issue_date) add('no_date', 'warn', 1, 'Brak daty wystawienia.');
 
   // Sumy: tylko dla zwykłej faktury (paragony mają wartości brutto, korekty bywają częściowe).

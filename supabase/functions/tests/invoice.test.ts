@@ -121,3 +121,20 @@ test('schemat odpowiedzi: wszystkie pola wymagane, brak dodatkowych, wartości p
   assert.ok(JSON.stringify(s).includes('"type":"null"'));
   assert.doesNotThrow(() => JSON.stringify(s));
 });
+
+test('kontrola: paragon bez numeru nie dostaje ostrzeżenia o braku numeru faktury (a faktura bez numeru — tak)', () => {
+  const receipt = { ...good(), document_kind: 'receipt', invoice: { number: null as unknown as string, issue_date: '2026-10-05', currency: 'PLN' } };
+  assert.deepEqual(verifyExtraction(normalizeExtraction(receipt, TODAY)).map((i) => i.code), []);
+  const invoice = { ...good(), invoice: { number: null as unknown as string, issue_date: '2026-10-05', currency: 'PLN' } };
+  assert.deepEqual(verifyExtraction(normalizeExtraction(invoice, TODAY)).map((i) => i.code), ['no_number']);
+});
+
+test('kontrola: „to nie dokument" → jedno ostrzeżenie i brak drugiego, drogiego odczytu', () => {
+  const notDoc = { document_kind: 'other', supplier: { name: null, nip: null }, invoice: { number: null, issue_date: null, currency: 'PLN' }, totals: { net: null, vat: null, gross: null }, lines: [], warnings: [{ code: 'not_invoice', text: 'To zaproszenie.' }], overall_confidence: 95 };
+  const issues = verifyExtraction(normalizeExtraction(notDoc, TODAY));
+  assert.deepEqual(issues.map((i) => i.code), ['not_a_document']);
+  assert.equal(issues[0].severity, 'warn');
+  assert.equal(needsEscalation(issues), false);
+  // ale „inny dokument" Z pozycjami albo faktura bez pozycji nadal są podejrzane
+  assert.ok(verifyExtraction(normalizeExtraction({ ...notDoc, document_kind: 'invoice' }, TODAY)).some((i) => i.code === 'no_lines'));
+});

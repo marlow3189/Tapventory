@@ -19,3 +19,7 @@ supabase/.branches/
 # Testy / narzedzia
 coverage/
 *.log
+
+# Zestaw ewaluacyjny: wygenerowane obrazy i wyniki (odtwarzalne poleceniami npm run eval:generate / eval:run)
+eval/data/
+eval/results/
