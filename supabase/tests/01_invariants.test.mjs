@@ -58,8 +58,8 @@ test('powierzchnia RPC: dokładnie te funkcje są wykonywalne przez zalogowanych
     'normalize_name', 'paths_in_tenant', 'plan_limits',
     // RPC wołane przez aplikację
     'accept_invite', 'accept_invite_code', 'ai_quota', 'create_invite', 'create_photo_document',
-    'create_tenant', 'dashboard_summary', 'delete_account', 'delete_tenant', 'get_invite_preview',
-    'match_products', 'next_count_candidates', 'post_document', 'record_stock_check',
+    'create_tenant', 'dashboard_summary', 'delete_account', 'delete_tenant', 'disconnect_ksef', 'get_invite_preview',
+    'get_ksef_status', 'match_products', 'next_count_candidates', 'post_document', 'record_stock_check',
     'register_push_token', 'retry_document', 'revoke_invite', 'set_billing_flag',
     'set_manager_flag', 'set_tenant_nip', 'should_ask_count', 'unpost_document',
   ].sort();
@@ -165,7 +165,7 @@ test('tabele „tylko do dopisywania" mają blokadę zmian i kasowania', async (
 });
 
 test('tabele wyłącznie-backendowe nie mają żadnych polityk dla zalogowanych', async () => {
-  for (const t of ['ksef_integrations', 'tenant_deletions', 'tenant_invites']) {
+  for (const t of ['ksef_integrations', 'ksef_sync_runs', 'ksef_raw_invoices', 'tenant_deletions', 'tenant_invites']) {
     const rows = await q(`select count(*)::int n from pg_policies where schemaname = 'public' and tablename = $1`, [t]);
     assert.equal(rows[0].n, 0, `${t}: polityki ujawniałyby sekrety`);
   }
