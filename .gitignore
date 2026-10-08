@@ -15,3 +15,7 @@ supabase/.branches/
 
 # System
 .DS_Store
+
+# Testy / narzedzia
+coverage/
+*.log

@@ -1,0 +1,14 @@
+{
+  "name": "tapventory",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tapventory - magazyn i zakupy dla firm uslugowych (Expo + Supabase)",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "db:test": "node --test \"supabase/tests/*.test.mjs\""
+  },
+  "devDependencies": {
+    "pg": "^8.23.1"
+  }
+}
