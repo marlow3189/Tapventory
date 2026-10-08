@@ -47,7 +47,7 @@ export function sumNet(lines: DocLine[]): number {
 /** Tolerancja: 2 grosze albo 0,5% (większa z nich) — zaokrąglenia VAT i rabaty. */
 export function totalsMatch(expected: number, actual: number): boolean {
   const tol = Math.max(0.02, Math.abs(expected) * 0.005);
-  return Math.abs(expected - actual) <= tol;
+  return Math.abs(expected - actual) <= tol + 1e-9;   // błąd zmiennoprzecinkowy nie może odrzucić różnicy równej tolerancji
 }
 
 export function validateDocument(doc: DocHeader, lines: DocLine[], today: Date = new Date()): Warning[] {

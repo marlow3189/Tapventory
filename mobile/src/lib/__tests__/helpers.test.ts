@@ -136,3 +136,15 @@ describe('daty wpisywane ręcznie', () => {
     expect(todayIso(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 });
+
+describe('tolerancja sum — granica', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { totalsMatch } = require('../document-math') as typeof import('../document-math');
+  it('różnica dokładnie 2 grosze mieści się w tolerancji mimo błędów zmiennoprzecinkowych', () => {
+    expect(totalsMatch(1, 1.02)).toBe(true);
+    expect(totalsMatch(10, 10.02)).toBe(true);
+    expect(totalsMatch(1, 1.03)).toBe(false);
+    expect(totalsMatch(100, 100.5)).toBe(true);    // 0,5% z 100
+    expect(totalsMatch(100, 100.51)).toBe(false);
+  });
+});

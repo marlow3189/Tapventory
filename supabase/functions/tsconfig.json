@@ -1,0 +1,20 @@
+{
+  // Sprawdzanie typów kodu funkcji (uruchamiane przez: npm run fn:typecheck).
+  // Funkcje działają w Deno, ale same pliki to zwykły TypeScript; pakiety "npm:..." mapujemy na te z projektu mobile.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM"],
+    "typeRoots": ["../../mobile/node_modules/@types"],
+    "types": ["node"],
+    "paths": {
+      "npm:@supabase/supabase-js@*": ["../../mobile/node_modules/@supabase/supabase-js"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

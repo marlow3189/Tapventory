@@ -4,9 +4,13 @@
   "version": "0.1.0",
   "description": "Tapventory - magazyn i zakupy dla firm uslugowych (Expo + Supabase)",
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "db:test": "node --test \"supabase/tests/*.test.mjs\""
+    "db:test": "node --test \"supabase/tests/*.test.mjs\"",
+    "fn:test": "node --test \"supabase/functions/tests/*.test.ts\"",
+    "fn:typecheck": "mobile/node_modules/.bin/tsc -p supabase/functions/tsconfig.json"
   },
   "devDependencies": {
     "pg": "^8.23.1"

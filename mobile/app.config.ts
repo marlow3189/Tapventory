@@ -59,6 +59,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Zasada Google Play: prosimy tylko o to, czego naprawdę używamy. Wtyczki i szablon dokładają
+    // domyślnie mikrofon i zapis na karcie — blokujemy je. SYSTEM_ALERT_WINDOW to „nakładka"
+    // menu deweloperskiego: potrzebna tylko w wersjach developerskich, nie w sklepie.
+    blockedPermissions: [
+      'android.permission.RECORD_AUDIO',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+      ...(APP_ENV === 'production' ? ['android.permission.SYSTEM_ALERT_WINDOW'] : []),
+    ],
   },
 
   web: {
@@ -97,10 +106,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         photosPermission: 'Tapventory potrzebuje dostępu do zdjęć, aby dodać zdjęcie produktu lub faktury.',
         cameraPermission: 'Tapventory używa aparatu do zdjęć produktów, zgłoszeń i faktur.',
+        microphonePermission: false, // nie nagrywamy wideo ani dźwięku
       },
     ],
     ['expo-notifications', { color: BRAND_COLOR }],
-    'expo-secure-store',
+    // Tokeny logowania w Keychain/Keystore. faceIDPermission: false — nie używamy biometrii,
+    // więc nie dodajemy NSFaceIDUsageDescription (Apple pyta o uzasadnienie każdego takiego wpisu).
+    ['expo-secure-store', { faceIDPermission: false }],
   ],
 
   experiments: {
