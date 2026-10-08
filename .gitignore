@@ -1,0 +1,17 @@
+# Sekrety — nigdy w repozytorium
+.env
+.env.*
+!.env.example
+
+# Node / Expo
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Supabase (lokalne artefakty CLI)
+supabase/.temp/
+supabase/.branches/
+
+# System
+.DS_Store

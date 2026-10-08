@@ -1,0 +1,32 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_SUPABASE_URL": "WKLEJ_URL_PROJEKTU_DEV_LUB_LOKALNY",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "WKLEJ_KLUCZ_ANON_DEV"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_SUPABASE_URL": "WKLEJ_URL_PROJEKTU_TEST",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "WKLEJ_KLUCZ_ANON_TEST"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_SUPABASE_URL": "WKLEJ_URL_PROJEKTU_PROD",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "WKLEJ_KLUCZ_ANON_PROD"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
