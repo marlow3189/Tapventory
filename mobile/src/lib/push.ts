@@ -48,3 +48,16 @@ export async function enablePush(): Promise<PushResult> {
     return 'error';
   }
 }
+
+export type PushStatus = 'granted' | 'denied' | 'undetermined' | 'unsupported';
+
+/** Czy użytkownik już zdecydował o powiadomieniach (do bannera „Włącz powiadomienia"). */
+export async function getPushStatus(): Promise<PushStatus> {
+  if (Platform.OS === 'web' || !Device.isDevice || Constants.executionEnvironment === 'storeClient') return 'unsupported';
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    return status === 'granted' ? 'granted' : status === 'denied' ? 'denied' : 'undetermined';
+  } catch {
+    return 'unsupported';
+  }
+}

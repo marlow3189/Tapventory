@@ -19,11 +19,13 @@ type AuthContextValue = {
   /** użytkownik wszedł z linku „zresetuj hasło" (przeglądarka/PWA) */
   recovery: boolean;
   clearRecovery: () => void;
+  /** wejście z linku „zresetuj hasło" otwartego w aplikacji na telefonie */
+  beginRecovery: () => void;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue>({
-  session: null, user: null, loading: true, recovery: false, clearRecovery: () => {}, signOut: async () => {},
+  session: null, user: null, loading: true, recovery: false, clearRecovery: () => {}, beginRecovery: () => {}, signOut: async () => {},
 });
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -58,10 +60,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     queryClient.clear();
   }, []);
   const clearRecovery = useCallback(() => setRecovery(false), []);
+  const beginRecovery = useCallback(() => setRecovery(true), []);
 
   const value = useMemo(
-    () => ({ session, user: session?.user ?? null, loading, recovery, clearRecovery, signOut }),
-    [session, loading, recovery, clearRecovery, signOut]
+    () => ({ session, user: session?.user ?? null, loading, recovery, clearRecovery, beginRecovery, signOut }),
+    [session, loading, recovery, clearRecovery, beginRecovery, signOut]
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

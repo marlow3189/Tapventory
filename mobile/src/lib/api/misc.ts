@@ -149,3 +149,12 @@ export function useAiQuota() {
     queryFn: async () => unwrap(await supabase.rpc('ai_quota', { p_tenant: tenantId! })) as { plan: string; limit: number | null; used: number; remaining: number; resets_at: string },
   });
 }
+
+/** Zmiana wyświetlanej nazwy (widocznej dla zespołu w komentarzach i historii). */
+export async function updateDisplayName(userId: string, name: string) {
+  const n = name.trim();
+  if (n.length < 2) throw { message: 'Imię musi mieć co najmniej 2 znaki.' };
+  const { error } = await supabase.from('profiles').update({ display_name: n }).eq('id', userId);
+  if (error) throw error;
+  await supabase.auth.updateUser({ data: { display_name: n } });   // żeby pasek zakładek pokazał nowe inicjały
+}

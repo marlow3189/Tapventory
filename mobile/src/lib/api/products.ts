@@ -175,3 +175,18 @@ export function useManualMovement() {
     },
   });
 }
+
+/** Szybkie dodanie dostawcy z formularza produktu (reszta danych dojdzie z faktury). */
+export function useCreateSupplier() {
+  const { tenantId } = useTenant();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (name: string): Promise<Supplier> => {
+      const row = { id: uuidv7(), tenant_id: tenantId!, name: name.trim() };
+      const { error } = await supabase.from('suppliers').insert(row);
+      if (error) throw error;
+      return { id: row.id, name: row.name, nip: null };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['suppliers'] }),
+  });
+}

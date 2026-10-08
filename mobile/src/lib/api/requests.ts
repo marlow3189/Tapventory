@@ -130,10 +130,13 @@ export function useSendMessage() {
   });
 }
 
+type FeedPages = { pages: RequestFeedRow[][]; pageParams: unknown[] };
+
+/** „+1 też potrzebuję": serce zmienia się natychmiast (optymistycznie), a przy błędzie wraca. */
 export function useToggleVote() {
   const { tenantId } = useTenant();
   const { user } = useAuth();
-  const done = useInvalidateRequests();
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: async (i: { requestId: string; voted: boolean }) => {
       if (i.voted) {
@@ -146,6 +149,23 @@ export function useToggleVote() {
         if (error) throw error;
       }
     },
-    onSuccess: done,
+    onMutate: async (i) => {
+      await qc.cancelQueries({ queryKey: ['requests'] });
+      const snapshots = qc.getQueriesData<FeedPages>({ queryKey: ['requests'] });
+      const flip = (r: RequestFeedRow): RequestFeedRow =>
+        r.id === i.requestId ? { ...r, voted_by_me: !i.voted, vote_count: Math.max(0, r.vote_count + (i.voted ? -1 : 1)) } : r;
+      qc.setQueriesData<FeedPages>({ queryKey: ['requests'] }, (old) => (old ? { ...old, pages: old.pages.map((p) => p.map(flip)) } : old));
+      const single = qc.getQueryData<RequestFeedRow>(['request', i.requestId]);
+      if (single) qc.setQueryData(['request', i.requestId], flip(single));
+      return { snapshots, single };
+    },
+    onError: (_e, i, ctx) => {
+      ctx?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+      if (ctx?.single) qc.setQueryData(['request', i.requestId], ctx.single);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['requests'] });
+      qc.invalidateQueries({ queryKey: ['request'] });
+    },
   });
 }
