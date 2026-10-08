@@ -153,7 +153,7 @@ test('feedy: nikt spoza firmy nie widzi niczego (widoki z prawami właściciela 
   const pid = await insertProduct(db, T.tenantId, 'Tajny produkt');
   const id = await report(T.emp, T.tenantId);
   await T.emp.session.query(`insert into public.request_messages (tenant_id, request_id, body) values ($1,$2,'tajne')`, [T.tenantId, id]);
-  await T.emp.session.query(`insert into public.stock_movements (tenant_id, product_id, movement_type, qty) values ($1,$2,'receipt',2)`, [T.tenantId, pid]);
+  await T.emp.session.query(`insert into public.stock_movements (tenant_id, product_id, movement_type, qty) values ($1,$2,'issue',-2)`, [T.tenantId, pid]);
 
   for (const v of ['request_feed', 'request_message_feed', 'request_event_feed', 'movement_feed', 'product_overview', 'team_members', 'team_invites']) {
     const r = await stranger.session.query(`select count(*)::int n from public.${v} where tenant_id=$1`, [T.tenantId]);
@@ -171,10 +171,10 @@ test('księga: znak ilości wymuszony typem ruchu; stan = suma ruchów; poniżej
   const ins = (who, type, qty, extra = '') => who.session.query(
     `insert into public.stock_movements (tenant_id, product_id, movement_type, qty) values ($1,$2,$3,$4)`, [T.tenantId, pid, type, qty]);
 
-  await expectError(ins(T.emp, 'receipt', -1), /qty_sign_matches_type/);
+  await expectError(ins(T.mgr, 'receipt', -1), /qty_sign_matches_type/);
   await expectError(ins(T.emp, 'issue', 1), /qty_sign_matches_type/);
-  await expectError(ins(T.emp, 'return', 2), /qty_sign_matches_type/);
-  await expectError(ins(T.emp, 'adjustment', 0), /qty_sign_matches_type/);
+  await expectError(ins(T.mgr, 'return', 2), /qty_sign_matches_type/);
+  await expectError(ins(T.mgr, 'adjustment', 0), /qty_sign_matches_type/);
 
   await ins(T.mgr, 'receipt', 10);
   await ins(T.emp, 'issue', -4);                 // „Zdejmij" — każdy członek
@@ -199,11 +199,11 @@ test('księga: serwer ustawia autora i czas ruchu (brak podszywania i antydatowa
     [T.tenantId, pid, T.mgr.user.id]
   );
   assert.equal(spoof.rows[0].created_by, T.emp.user.id);
-  const { rows } = await T.emp.session.query(
+  const { rows } = await T.mgr.session.query(
     `insert into public.stock_movements (tenant_id, product_id, movement_type, qty, created_at) values ($1,$2,'receipt',1,'2001-01-01') returning created_at, created_by`,
     [T.tenantId, pid]
   );
-  assert.equal(rows[0].created_by, T.emp.user.id);
+  assert.equal(rows[0].created_by, T.mgr.user.id);
   assert.ok(Date.now() - new Date(rows[0].created_at).getTime() < 60_000, 'czas = teraz, nie rok 2001');
   // backend (service_role) może zaimportować historię z własnym czasem
   await db.admin.query(`insert into public.stock_movements (tenant_id, product_id, movement_type, qty, created_by, created_at) values ($1,$2,'receipt',1,$3,'2001-01-01')`, [T.tenantId, pid, T.emp.user.id]);

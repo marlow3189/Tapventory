@@ -101,6 +101,7 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
     request_events: 'SELECT',
     request_feed: 'SELECT',
     request_message_feed: 'SELECT',
+    request_votes: 'DELETE,INSERT,SELECT',
     requests: 'INSERT,SELECT,UPDATE',          // bez DELETE: zgłoszeń się nie kasuje
     reward_ledger: 'SELECT',
     stock_checks: 'SELECT',

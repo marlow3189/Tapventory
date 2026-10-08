@@ -148,7 +148,8 @@ test('F4: usunięcie konta — z historią w firmie; profil anonimizowany, ślad
   const A = await ownerWithTenant(db, 'F4c');
   const emp = await addMember(db, A.tenantId, 'employee');
   const pid = await insertProduct(db, A.tenantId, 'Gaziki');
-  await emp.session.query(`insert into public.stock_movements (tenant_id, product_id, movement_type, qty) values ($1,$2,'receipt',5)`, [A.tenantId, pid]);
+  await A.session.query(`insert into public.stock_movements (tenant_id, product_id, movement_type, qty) values ($1,$2,'receipt',9)`, [A.tenantId, pid]);
+  await emp.session.query(`insert into public.stock_movements (tenant_id, product_id, movement_type, qty) values ($1,$2,'issue',-5)`, [A.tenantId, pid]);
   await emp.session.query(`insert into public.requests (tenant_id, free_name) values ($1,'Płyn')`, [A.tenantId]);
   await db.admin.query(`update public.profiles set phone='+48 600 100 200' where id=$1`, [emp.user.id]);
 
