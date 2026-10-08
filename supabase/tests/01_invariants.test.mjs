@@ -80,6 +80,8 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
     document_lines: 'DELETE,INSERT,SELECT,UPDATE',
     documents: 'DELETE,INSERT,SELECT,UPDATE',
     memberships: 'DELETE,SELECT',            // + UPDATE tylko na 3 kolumnach (niżej)
+    movement_feed: 'SELECT',
+    product_overview: 'SELECT',
     product_stock: 'SELECT',
     products: 'DELETE,INSERT,SELECT,UPDATE',
     profiles: 'SELECT',                       // + UPDATE tylko display_name, phone
@@ -87,7 +89,11 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
     referral_codes: 'SELECT',
     referrals: 'SELECT',
     request_messages: 'INSERT,SELECT',
-    requests: 'DELETE,INSERT,SELECT,UPDATE',
+    request_event_feed: 'SELECT',
+    request_events: 'SELECT',
+    request_feed: 'SELECT',
+    request_message_feed: 'SELECT',
+    requests: 'INSERT,SELECT,UPDATE',          // bez DELETE: zgłoszeń się nie kasuje
     reward_ledger: 'SELECT',
     stock_movements: 'INSERT,SELECT',
     suppliers: 'DELETE,INSERT,SELECT,UPDATE',
