@@ -1,0 +1,3 @@
+# Aplikacja jednostronicowa (SPA): każda ścieżka (np. /request/123) ma zwrócić index.html,
+# a dalej kieruje już nawigacja w aplikacji. Plik dla Cloudflare Pages / Netlify.
+/*    /index.html   200

@@ -12,6 +12,10 @@
 --    Tabela jest WYŁĄCZNIE dla backendu (service_role) — aplikacja nie ma do niej dostępu.
 -- C. assistant_usage — dzienny licznik pytań do asystenta AI na osobę. Bez limitu każdy
 --    członek firmy mógłby generować nieograniczone koszty modelu.
+-- D. reap_stuck_documents — „strażnik" dokumentów, które utknęły w statusie processing
+--    (np. funkcja AI padła w trakcie). Uruchamiany co kilka minut przez harmonogram
+--    (patrz supabase/functions/README.md). Oznacza je jako failed, by użytkownik mógł
+--    spróbować ponownie albo wpisać pozycje ręcznie.
 -- ============================================================================
 
 -- A ---------------------------------------------------------------------------
@@ -76,6 +80,28 @@ end;
 $$;
 revoke execute on function public.bump_assistant_usage(uuid, uuid, int) from public, anon, authenticated;
 grant  execute on function public.bump_assistant_usage(uuid, uuid, int) to service_role;
+
+-- D ---------------------------------------------------------------------------
+create or replace function public.reap_stuck_documents(p_older_than interval default interval '10 minutes')
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count int;
+begin
+  update public.documents
+     set status = 'failed',
+         error_message = 'Odczyt trwał zbyt długo i został przerwany. Spróbuj ponownie lub wpisz pozycje ręcznie.'
+   where status = 'processing'
+     and updated_at < now() - p_older_than;
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+revoke execute on function public.reap_stuck_documents(interval) from public, anon, authenticated;
+grant  execute on function public.reap_stuck_documents(interval) to service_role;
 
 -- ============================================================================
 -- KONIEC 0009.

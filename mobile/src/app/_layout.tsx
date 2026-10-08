@@ -5,7 +5,7 @@
 //   (app)         — właściwa aplikacja (zakładki, produkty, zgłoszenia, faktury…)
 
 import { useEffect, type PropsWithChildren } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -18,6 +18,7 @@ import { handleAuthUrl } from '@/lib/auth-links';
 import { setupNotificationHandler } from '@/lib/push';
 import { registerServiceWorker } from '@/lib/pwa';
 import { queryClient, startQueryManagers } from '@/lib/query';
+import { configureWebBarcodeWasm } from '@/lib/web-barcode';
 import { TenantProvider } from '@/lib/tenant';
 import { layout, useColors } from '@/theme';
 
@@ -29,6 +30,7 @@ export default function RootLayout() {
   useEffect(() => {
     setupNotificationHandler();
     registerServiceWorker();
+    configureWebBarcodeWasm();
     return startQueryManagers();
   }, []);
 
@@ -84,15 +86,18 @@ function ThemedApp() {
  */
 function WebFrame({ children }: PropsWithChildren) {
   const c = useColors();
+  const { width } = useWindowDimensions();
   if (Platform.OS !== 'web') return <>{children}</>;
+  const wide = width > layout.maxContent;   // ramka z liniami tylko na komputerze; w telefonie aplikacja wypełnia ekran
   return (
     <View style={[styles.outer, { backgroundColor: c.bgSecondary }]}>
-      <View style={[styles.inner, { backgroundColor: c.bg, borderColor: c.border }]}>{children}</View>
+      <View style={[styles.inner, { backgroundColor: c.bg, borderColor: c.border }, wide ? styles.frame : null]}>{children}</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   outer: { flex: 1, alignItems: 'center' },
-  inner: { flex: 1, width: '100%', maxWidth: layout.maxContent, borderLeftWidth: StyleSheet.hairlineWidth, borderRightWidth: StyleSheet.hairlineWidth },
+  inner: { flex: 1, width: '100%', maxWidth: layout.maxContent },
+  frame: { borderLeftWidth: StyleSheet.hairlineWidth, borderRightWidth: StyleSheet.hairlineWidth },
 });

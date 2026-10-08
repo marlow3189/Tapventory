@@ -1,7 +1,7 @@
 // Arkusz wysuwany od dołu (jak menu „+" i „Udostępnij" w Instagramie).
 // Zbudowany na Modal z React Native — działa tak samo na iOS, Androidzie i w przeglądarce.
 
-import { useEffect, useRef, type PropsWithChildren } from 'react';
+import { useEffect, useState, type PropsWithChildren } from 'react';
 import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { layout, radius, useColors } from '@/theme';
@@ -12,7 +12,7 @@ export function Sheet({ visible, onClose, title, children, scroll = false }: Pro
 }>) {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const slide = useRef(new Animated.Value(0)).current;
+  const [slide] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (visible) {

@@ -1,0 +1,16 @@
+# Nagłówki dla Cloudflare Pages / Netlify (plik trafia do dist/ razem z aplikacją).
+# Service worker nie może siedzieć w długim cache — inaczej aktualizacje nie dochodzą do użytkowników.
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: no-cache
+/_expo/static/*
+  Cache-Control: public, max-age=31536000, immutable
+/zxing_reader.wasm
+  Cache-Control: public, max-age=31536000, immutable
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()
+  X-Frame-Options: DENY

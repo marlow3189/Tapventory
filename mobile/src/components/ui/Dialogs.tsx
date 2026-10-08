@@ -96,7 +96,7 @@ export function DialogsProvider({ children }: PropsWithChildren) {
 function ToastView({ toast, onHide }: { toast: { id: number; message: string; kind: ToastKind } | null; onHide: () => void }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const anim = useRef(new Animated.Value(0)).current;
+  const [anim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     Animated.timing(anim, { toValue: toast ? 1 : 0, duration: 180, useNativeDriver: Platform.OS !== 'web' }).start();

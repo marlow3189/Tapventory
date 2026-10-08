@@ -80,3 +80,26 @@ export function validateDocument(doc: DocHeader, lines: DocLine[], today: Date =
   if (low > 0) w.push({ code: 'low_confidence', severity: 'warn', text: `AI nie jest pewne ${low} ${low === 1 ? 'pozycji' : 'pozycji'} — sprawdź je ze zdjęciem.` });
   return w;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Opakowania: faktura mówi „2 op.", a w magazynie liczymy sztuki. Przeliczenie jest PODPOWIEDZIĄ
+// (nigdy cichą zmianą): użytkownik klika „Przelicz", widząc wynik.
+// ---------------------------------------------------------------------------------------------
+
+const PACK_UNIT_RE = /^(op|opak|opakowanie|opakowania|karton|kartony|kart|krt|zgrz|zgrzewka|paczka|pacz|box|pack|set|zestaw)\.?$/i;
+
+/** Czy jednostka z faktury wygląda na opakowanie zbiorcze (a nie sztukę, kilogram, litr)? */
+export function isPackUnit(unit: string | null | undefined): boolean {
+  return PACK_UNIT_RE.test((unit ?? '').trim());
+}
+
+/** 2 op. po 12 szt. za 60 zł/op. → 24 szt. po 5 zł/szt. (wartość wiersza się nie zmienia). */
+export function convertToStockUnits(
+  line: { qty: number; unit_price_net: number | null },
+  packSize: number
+): { qty: number; unit_price_net: number | null } {
+  if (!(packSize > 0)) return line;
+  const qty = Math.round(line.qty * packSize * 1000) / 1000;
+  const price = line.unit_price_net === null ? null : Math.round((line.unit_price_net / packSize) * 10000) / 10000;
+  return { qty, unit_price_net: price };
+}

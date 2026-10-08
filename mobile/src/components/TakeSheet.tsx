@@ -4,8 +4,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chips, QtyStepper, Sheet, Text, TextField, useDialogs } from '@/components/ui';
-import { useProjects } from '@/lib/api/products';
-import { useTakeStock } from '@/lib/api/products';
+import { useProjects, useTakeStock } from '@/lib/api/products';
 import { shouldAskCount, useRecordCount } from '@/lib/api/misc';
 import { formatQty } from '@/lib/format';
 import { REASON_LABEL } from '@/lib/movements';

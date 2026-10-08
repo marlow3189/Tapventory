@@ -91,3 +91,48 @@ describe('wyszukiwanie po polsku', () => {
     expect(matchesQuery('cokolwiek', '   ')).toBe(true);
   });
 });
+
+describe('liczby ze znakiem i opakowania', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { parseSigned } = require('../qty') as typeof import('../qty');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { isPackUnit, convertToStockUnits } = require('../document-math') as typeof import('../document-math');
+
+  it('parsuje ilości ujemne z korekt', () => {
+    expect(parseSigned('-2,5')).toBe(-2.5);
+    expect(parseSigned('3')).toBe(3);
+    expect(parseSigned('-')).toBeNull();
+    expect(parseSigned('')).toBeNull();
+    expect(parseSigned('--1')).toBeNull();
+  });
+  it('rozpoznaje jednostki-opakowania', () => {
+    for (const u of ['op.', 'OP', 'opak.', 'karton', 'zgrzewka', 'pack', ' op ']) expect(isPackUnit(u)).toBe(true);
+    for (const u of ['szt.', 'kg', 'l', 'm', '', null, undefined]) expect(isPackUnit(u)).toBe(false);
+  });
+  it('przelicza opakowania na sztuki z zachowaniem wartości wiersza', () => {
+    const r = convertToStockUnits({ qty: 2, unit_price_net: 60 }, 12);
+    expect(r).toEqual({ qty: 24, unit_price_net: 5 });
+    expect(r.qty * (r.unit_price_net as number)).toBeCloseTo(120, 6);
+    expect(convertToStockUnits({ qty: 1, unit_price_net: null }, 6)).toEqual({ qty: 6, unit_price_net: null });
+    expect(convertToStockUnits({ qty: 3, unit_price_net: 10 }, 0)).toEqual({ qty: 3, unit_price_net: 10 });
+  });
+});
+
+describe('daty wpisywane ręcznie', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { parseDateInput, todayIso } = require('../dates') as typeof import('../dates');
+  it('rozumie polskie zapisy i ISO', () => {
+    expect(parseDateInput('2026-10-08')).toBe('2026-10-08');
+    expect(parseDateInput('08.10.2026')).toBe('2026-10-08');
+    expect(parseDateInput('8-10-2026')).toBe('2026-10-08');
+    expect(parseDateInput(' 8/1/2026 ')).toBe('2026-01-08');
+  });
+  it('odrzuca daty nieistniejące i śmieci', () => {
+    for (const bad of ['31.02.2026', '2026-13-01', '00.01.2026', 'wczoraj', '', '2026/10', '8.10.26']) expect(parseDateInput(bad)).toBeNull();
+    expect(parseDateInput('29.02.2024')).toBe('2024-02-29');   // rok przestępny
+    expect(parseDateInput('29.02.2025')).toBeNull();
+  });
+  it('dzisiejsza data ma format ISO', () => {
+    expect(todayIso(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+});

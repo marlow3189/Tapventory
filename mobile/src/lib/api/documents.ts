@@ -22,6 +22,8 @@ export function useDocument(id: string | undefined) {
   return useQuery({
     queryKey: ['document', id],
     enabled: Boolean(id),
+    // dopóki AI czyta dokument, dopytujemy co kilka sekund (Realtime zwykle uprzedzi to szybciej)
+    refetchInterval: (q) => (q.state.data?.status === 'processing' ? 4000 : false),
     queryFn: async () => unwrap(await supabase.from('document_overview').select('*').eq('id', id!).single()) as DocumentRow,
   });
 }

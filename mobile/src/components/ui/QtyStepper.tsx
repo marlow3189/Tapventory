@@ -42,6 +42,7 @@ export function QtyStepper({ value, onChange, unit, step = 1, autoFocus }: {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'center' },
   btn: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
-  box: { minWidth: 120, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6, borderWidth: 1, borderRadius: radius.m, paddingHorizontal: 12, paddingVertical: 8 },
-  input: { fontSize: 28, fontWeight: '700', textAlign: 'center', minWidth: 60, padding: 0 },
+  // Stała szerokość pola: <input> w przeglądarce ma własną domyślną szerokość (~20 znaków) i rozpychałby wiersz poza ekran.
+  box: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6, borderWidth: 1, borderRadius: radius.m, paddingHorizontal: 12, paddingVertical: 8 },
+  input: { fontSize: 28, fontWeight: '700', textAlign: 'center', width: 84, padding: 0 },
 });

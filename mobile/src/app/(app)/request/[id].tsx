@@ -15,11 +15,12 @@ import { STATUS_LABEL, STATUS_TONE, nextActions, type RequestStatus } from '@/li
 import { useTenant } from '@/lib/tenant';
 import { spacing, useColors } from '@/theme';
 
+// krótkie etykiety, żeby w pięciu kolumnach nic nie łamało się w połowie słowa
 const STEPS: { status: RequestStatus; label: string; at: 'created_at' | 'accepted_at' | 'ordered_at' | 'delivered_at' | 'received_at' }[] = [
   { status: 'reported', label: 'Zgłoszone', at: 'created_at' },
-  { status: 'accepted', label: 'Zaakceptowane', at: 'accepted_at' },
+  { status: 'accepted', label: 'Akcept.', at: 'accepted_at' },
   { status: 'ordered', label: 'Zamówione', at: 'ordered_at' },
-  { status: 'delivered', label: 'Dostarczone', at: 'delivered_at' },
+  { status: 'delivered', label: 'Dostawa', at: 'delivered_at' },
   { status: 'received', label: 'Przyjęte', at: 'received_at' },
 ];
 
@@ -113,7 +114,7 @@ export default function RequestDetail() {
       }
       contentStyle={{ gap: 0 }}
     >
-      <View style={[styles.photo, { backgroundColor: c.fill }]}>
+      <View style={[styles.photo, { backgroundColor: c.fill, aspectRatio: r.photo_path ?? r.product_photo_path ? 1 : 2.4 }]}>
         <SignedImage path={r.photo_path ?? r.product_photo_path} style={StyleSheet.absoluteFill} fallback={<PhotoPlaceholder name={title} />} label={title} />
       </View>
 
@@ -168,7 +169,7 @@ export default function RequestDetail() {
                   <View style={[styles.dot, { backgroundColor: done ? c.success : c.fill, borderColor: done ? c.success : c.border }]}>
                     {done ? <Icon name="checkmark" size={12} color="#FFFFFF" /> : null}
                   </View>
-                  <Text variant="footnote" align="center" color={done ? 'primary' : 'tertiary'} numberOfLines={2}>
+                  <Text variant="footnote" align="center" color={done ? 'primary' : 'tertiary'} numberOfLines={1}>
                     {s.label}
                   </Text>
                   {when && done ? (

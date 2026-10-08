@@ -38,7 +38,7 @@ function RequestCardBase({ r, mine, onOpen, onVote }: {
       </View>
 
       <Touchable onPress={onOpen} accessibilityLabel={`Otwórz zgłoszenie: ${title}`} pressedOpacity={0.9}>
-        <View style={[styles.media, { backgroundColor: c.fill }]}>
+        <View style={[styles.media, { backgroundColor: c.fill, aspectRatio: photo ? 1 : 2.4 }]}>
           <SignedImage path={photo} style={StyleSheet.absoluteFill} fallback={<PhotoPlaceholder name={title} />} label={title} />
         </View>
       </Touchable>

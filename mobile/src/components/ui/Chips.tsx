@@ -11,7 +11,7 @@ export function Chips<T extends string>({ options, value, onChange }: {
 }) {
   const c = useColors();
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroll} contentContainerStyle={styles.row}>
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -34,6 +34,7 @@ export function Chips<T extends string>({ options, value, onChange }: {
 }
 
 const styles = StyleSheet.create({
+  scroll: { flexGrow: 0, flexShrink: 0 },
   row: { gap: spacing.s, paddingHorizontal: spacing.l, paddingVertical: spacing.s },
   chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill, minHeight: 34, justifyContent: 'center' },
 });

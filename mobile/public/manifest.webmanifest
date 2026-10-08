@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "Tapventory",
+  "short_name": "Tapventory",
+  "description": "Prosty magazyn dla małych firm usługowych: stany, zgłoszenia braków i faktury skanowane przez AI.",
+  "lang": "pl",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Zgłoś brak", "short_name": "Zgłoś brak", "url": "/request/new", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Zdejmij z magazynu", "short_name": "Zdejmij", "url": "/scan?mode=take", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Skanuj fakturę", "short_name": "Faktura", "url": "/documents/scan", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ]
+}

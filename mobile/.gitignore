@@ -48,3 +48,6 @@ example
 !.env.example
 /dist
 /coverage
+
+# kopiowany skryptem scripts/copy-wasm.mjs po npm install
+/public/zxing_reader.wasm

@@ -35,7 +35,7 @@ export default function Activity() {
     void getPushStatus().then(setPush);
   }, []);
 
-  const rows = list.data ?? [];
+  const rows = useMemo(() => list.data ?? [], [list.data]);
   const unreadIds = useMemo(() => rows.filter((n) => !n.read_at).map((n) => n.id), [rows]);
 
   return (

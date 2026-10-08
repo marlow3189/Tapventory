@@ -1,6 +1,6 @@
 // Szczegóły produktu — układ jak post w Instagramie: duże zdjęcie, stan, akcje, historia „komentarzy".
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ManualMovementSheet } from '@/components/ManualMovementSheet';
@@ -21,13 +21,16 @@ export default function ProductDetail() {
   const { isManager } = useTenant();
   const product = useProduct(id);
   const movements = useProductMovements(id);
-  const [takeOpen, setTakeOpen] = useState(false);
+  const [takeOpened, setTakeOpened] = useState(false);
+  const [takeClosed, setTakeClosed] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
 
-  // wejście ze skanera („Zdejmij") od razu otwiera arkusz
-  useEffect(() => {
-    if (take === '1' && product.data) setTakeOpen(true);
-  }, [take, product.data]);
+  // wejście ze skanera (?take=1) od razu otwiera arkusz „Zdejmij"; po zamknięciu nie otwiera się ponownie
+  const takeOpen = takeOpened || (take === '1' && Boolean(product.data) && !takeClosed);
+  const closeTake = () => {
+    setTakeOpened(false);
+    setTakeClosed(true);
+  };
 
   const p = product.data;
   if (product.isError && !p) {
@@ -58,7 +61,7 @@ export default function ProductDetail() {
       headerRight={isManager ? <HeaderButton icon="create-outline" label="Edytuj produkt" onPress={() => router.push(`/product/edit?id=${p.id}`)} /> : undefined}
       contentStyle={{ gap: 0 }}
     >
-      <View style={[styles.photo, { backgroundColor: c.fill }]}>
+      <View style={[styles.photo, { backgroundColor: c.fill, aspectRatio: p.photo_path ? 1 : 2 }]}>
         <SignedImage path={p.photo_path} style={StyleSheet.absoluteFill} fallback={<PhotoPlaceholder name={p.name} />} label={p.name} />
       </View>
 
@@ -76,7 +79,7 @@ export default function ProductDetail() {
         </View>
 
         <View style={styles.actions}>
-          <Button title="Zdejmij" icon="remove-circle-outline" onPress={() => setTakeOpen(true)} fullWidth />
+          <Button title="Zdejmij" icon="remove-circle-outline" onPress={() => { setTakeClosed(false); setTakeOpened(true); }} fullWidth />
           <View style={styles.row2}>
             <Button
               title="Zgłoś brak"
@@ -129,12 +132,12 @@ export default function ProductDetail() {
         ) : (
           <View style={{ padding: spacing.l, flexDirection: 'row', gap: 8, alignItems: 'center' }}>
             <Icon name="time-outline" size={18} color={c.textTertiary} />
-            <Text color="secondary">Brak ruchów — historia pojawi się po pierwszym „Zdejmij" lub przyjęciu.</Text>
+            <Text color="secondary">Brak ruchów — historia pojawi się po pierwszym „Zdejmij” lub przyjęciu.</Text>
           </View>
         )}
       </View>
 
-      <TakeSheet product={p} visible={takeOpen} onClose={() => setTakeOpen(false)} />
+      <TakeSheet product={p} visible={takeOpen} onClose={closeTake} />
       {isManager ? <ManualMovementSheet product={p} visible={moveOpen} onClose={() => setMoveOpen(false)} /> : null}
     </Screen>
   );

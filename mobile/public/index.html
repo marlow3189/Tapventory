@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover: treść może wejść pod "notch" iPhone'a (aplikacja obsługuje to marginesami bezpiecznego obszaru) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <title>%WEB_TITLE%</title>
+    <meta name="description" content="Prosty magazyn dla małych firm usługowych: stany, zgłoszenia braków i faktury skanowane przez AI." />
+
+    <!-- Kolor paska przeglądarki / tła okna zainstalowanej aplikacji (jasny i ciemny tryb) -->
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- PWA: manifest, ikony, tryb pełnoekranowy na iPhonie / Androidzie -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Tapventory" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Zalecany przez react-native-web „reset": pełna wysokość, przewijanie obsługują ScrollView-y w aplikacji -->
+    <style id="expo-reset">
+      html, body { height: 100%; }
+      body { overflow: hidden; }
+      #root { display: flex; height: 100%; flex: 1; }
+    </style>
+    <!-- Tło zgodne z trybem jasnym/ciemnym już w pierwszej klatce (bez białego mignięcia w nocy), brak niebieskiej poświaty przy dotyku -->
+    <style id="tv-base">
+      html, body { background-color: #FFFFFF; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+      @media (prefers-color-scheme: dark) { html, body { background-color: #000000; } }
+      input, textarea { font-family: inherit; }
+    </style>
+  </head>
+
+  <body>
+    <noscript>Tapventory wymaga włączonej obsługi JavaScript.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

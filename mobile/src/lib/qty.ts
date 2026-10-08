@@ -20,3 +20,19 @@ export function stepQty(input: string, delta: number): string {
   const base = parseQty(input) ?? 0;
   return qtyToInput(Math.max(0, base + delta));
 }
+
+/** Liczba ze znakiem (faktury korygujące mają ilości ujemne): "-2,5" → -2.5; puste/nieliczbowe → null. */
+export function parseSigned(input: string | number | null | undefined): number | null {
+  if (typeof input === 'number') return Number.isFinite(input) ? input : null;
+  const raw = (input ?? '').trim().replace(/\s+/g, '');
+  if (raw.startsWith('-')) {
+    const n = parseQty(raw.slice(1));
+    return n === null ? null : -n;
+  }
+  return parseQty(raw);
+}
+
+/** Cena/kwota: "12,50" → 12.5, null dla pustego. Tylko wartości >= 0. */
+export function parseMoney(input: string | number | null | undefined): number | null {
+  return parseQty(input);
+}

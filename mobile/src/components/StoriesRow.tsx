@@ -13,7 +13,7 @@ export function StoriesRow() {
 
   if (isPending) {
     return (
-      <ScrollView horizontal scrollEnabled={false} contentContainerStyle={styles.row}>
+      <ScrollView horizontal scrollEnabled={false} style={styles.scroll} contentContainerStyle={styles.row}>
         {[0, 1, 2, 3].map((i) => (
           <Skeleton key={i} width={66} height={66} round={33} />
         ))}
@@ -22,7 +22,7 @@ export function StoriesRow() {
   }
   if (stories.length === 0) return null;
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroll} contentContainerStyle={styles.row}>
       {stories.map((s) => (
         <StoryBubble
           key={s.id}
@@ -38,5 +38,6 @@ export function StoriesRow() {
 }
 
 const styles = StyleSheet.create({
+  scroll: { flexGrow: 0, flexShrink: 0 },
   row: { paddingHorizontal: spacing.l, paddingVertical: spacing.m, gap: spacing.s, alignItems: 'flex-start' },
 });

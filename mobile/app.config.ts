@@ -67,6 +67,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: 'single',
     bundler: 'metro',
     favicon: './assets/images/favicon.png',
+    lang: 'pl',
+    // Szablon strony (manifest PWA, ikony, kolory) leży w public/index.html — dla trybu "single"
+    // Expo nie używa +html.tsx.
   },
 
   plugins: [

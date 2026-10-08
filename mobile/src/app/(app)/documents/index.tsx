@@ -5,18 +5,11 @@ import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { Redirect, useRouter } from 'expo-router';
 import { Button, Chips, EmptyState, ErrorState, Icon, Pill, RowSkeleton, Screen, Text, Touchable } from '@/components/ui';
 import { useDocuments } from '@/lib/api/documents';
+import { DOC_STATUS } from '@/lib/doc-status';
 import { formatDate, formatMoney, timeAgo } from '@/lib/format';
 import { useTenant } from '@/lib/tenant';
-import type { DocumentRow } from '@/lib/types';
-import { spacing, useColors, type Tone } from '@/theme';
+import { spacing, useColors } from '@/theme';
 
-export const DOC_STATUS: Record<DocumentRow['status'], { label: string; tone: Tone }> = {
-  processing: { label: 'AI czyta…', tone: 'info' },
-  draft: { label: 'Do sprawdzenia', tone: 'warning' },
-  verified: { label: 'Zweryfikowana', tone: 'violet' },
-  posted: { label: 'Zaksięgowana', tone: 'success' },
-  failed: { label: 'Błąd odczytu', tone: 'danger' },
-};
 
 type Filter = 'todo' | 'all' | 'posted';
 

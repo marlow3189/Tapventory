@@ -190,3 +190,29 @@ export function useCreateSupplier() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['suppliers'] }),
   });
 }
+
+/** Dodanie zlecenia/projektu (np. „Auto Kowalskiego", „Wesele 12.10"), do którego przypisuje się zużycie i zakupy. */
+export function useCreateProject() {
+  const { tenantId } = useTenant();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (i: { name: string; ref_number?: string | null }) => {
+      const { error } = await supabase.from('projects').insert({
+        id: uuidv7(), tenant_id: tenantId!, name: i.name.trim(), ref_number: i.ref_number?.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+  });
+}
+
+export function useSetProjectStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (i: { id: string; status: 'open' | 'closed' }) => {
+      const { error } = await supabase.from('projects').update({ status: i.status }).eq('id', i.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+  });
+}

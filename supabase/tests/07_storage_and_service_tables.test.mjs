@@ -68,3 +68,32 @@ test('zalogowany użytkownik nie może wywołać funkcji licznika (tylko backend
     /permission denied/
   );
 });
+
+test('strażnik: dokument wiszący w "processing" przechodzi w "failed", świeży zostaje', async () => {
+  const T = await ownerWithTenant(db, 'R1');
+  const id = (n) => `00000000-0000-4000-8000-00000000000${n}`;
+  for (const n of [1, 2]) {
+    await T.session.query(`select public.create_photo_document($1, $2, $3)`, [id(n), T.tenantId, [`${T.tenantId}/documents/${id(n)}/page-1.jpg`]]);
+  }
+  // postarzamy pierwszy dokument (z pominięciem wyzwalaczy, które ustawiają updated_at)
+  await db.admin.query('set session_replication_role = replica');
+  await db.admin.query(`update public.documents set updated_at = now() - interval '1 hour' where id = $1`, [id(1)]);
+  await db.admin.query('reset session_replication_role');
+
+  const svc = asService(db);
+  const { rows } = await svc.query(`select public.reap_stuck_documents(interval '10 minutes') as n`);
+  assert.equal(rows[0].n, 1);
+  const st = await db.admin.query(`select id, status, error_message from public.documents order by id`);
+  assert.equal(st.rows[0].status, 'failed');
+  assert.match(st.rows[0].error_message, /zbyt długo/);
+  assert.equal(st.rows[1].status, 'processing');
+
+  // a „failed" można ponowić (retry_document) albo wpisać ręcznie
+  await T.session.query(`select public.retry_document($1)`, [id(1)]);
+  assert.equal((await db.admin.query(`select status from public.documents where id = $1`, [id(1)])).rows[0].status, 'processing');
+});
+
+test('strażnik jest niedostępny dla zalogowanych', async () => {
+  const T = await ownerWithTenant(db, 'R2');
+  await expectError(T.session.query(`select public.reap_stuck_documents()`), /permission denied/);
+});

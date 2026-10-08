@@ -1,5 +1,4 @@
-import { StyleSheet, View } from 'react-native';
-import { Linking } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import { Button, Icon, Sheet, Text } from '@/components/ui';
 import { AI_PROVIDER_LABEL } from '@/lib/consent';
 import { LINKS } from '@/lib/links';

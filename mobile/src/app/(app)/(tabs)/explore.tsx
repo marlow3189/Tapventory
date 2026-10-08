@@ -26,7 +26,7 @@ export default function Explore() {
   const [filter, setFilter] = useState<Filter>('all');
 
   const size = (Math.min(width, layout.maxContent) - GAP * (COLUMNS - 1)) / COLUMNS;
-  const all = products.data ?? [];
+  const all = useMemo(() => products.data ?? [], [products.data]);
   const lowCount = useMemo(() => all.filter((p) => p.active && p.below_min).length, [all]);
   const rows = useMemo(
     () =>
