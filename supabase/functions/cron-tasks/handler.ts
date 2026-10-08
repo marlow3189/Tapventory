@@ -1,4 +1,4 @@
-// Zadania cykliczne (harmonogram co minutę): strażnik wiszących faktur, przypomnienia o mini-spisie, wysyłka push.
+// Zadania cykliczne (harmonogram co minutę): strażnik wiszących faktur, przypomnienia o mini-spisie, KSeF, wysyłka push.
 // Jeden adres zamiast trzech harmonogramów — prościej dla juniora (jeden wpis w panelu Supabase → Cron).
 
 import { errorResponse, json, preflight } from '../_shared/http.ts';
@@ -6,6 +6,8 @@ import { requireCronSecret, sendPendingPushes, type PushDeps } from '../send-pus
 
 export interface CronDeps {
   push: PushDeps;
+  /** automatyczne pobieranie faktur z KSeF (pomijane, gdy KSeF nie jest skonfigurowany) */
+  ksef?: { startDue(): Promise<unknown> };
   db: { rpc(name: 'reap_stuck_documents' | 'queue_count_reminders'): Promise<unknown> };
   now: () => Date;
 }
@@ -23,6 +25,7 @@ export async function runCronTasks(deps: CronDeps) {
   // przypomnienia o spisie tylko raz dziennie w godzinach pracy (czas UTC; w PL to ok. 8–9 rano)
   const h = deps.now().getUTCHours();
   if (h === 6 || h === 7) await step('count_reminders', () => deps.db.rpc('queue_count_reminders'));
+  if (deps.ksef) await step('ksef', () => deps.ksef!.startDue());
   await step('push', () => sendPendingPushes(deps.push));
   return result;
 }

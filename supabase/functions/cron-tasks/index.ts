@@ -1,4 +1,4 @@
-import { adminClient, buildPushDeps, cronSecret } from '../_shared/runtime.ts';
+import { adminClient, buildCronKsef, buildPushDeps, cronSecret } from '../_shared/runtime.ts';
 import { handleCron } from './handler.ts';
 
 declare const Deno: { serve(handler: (req: Request) => Response | Promise<Response>): void };
@@ -9,6 +9,7 @@ Deno.serve((req) => {
     req,
     {
       push: buildPushDeps(),
+      ksef: buildCronKsef(),
       db: {
         async rpc(name) {
           const { data, error } = await admin.rpc(name);

@@ -12,13 +12,18 @@ import { ReserveError, type ProcessDeps } from '../process-document/handler.ts';
 import type { AssistantDeps } from '../assistant/handler.ts';
 import type { BarcodeDeps } from '../barcode-lookup/handler.ts';
 import type { PushDeps } from '../send-push/handler.ts';
+import type { ConnectDeps } from '../ksef-connect/handler.ts';
+import type { KsefSyncDeps } from '../ksef-sync/handler.ts';
+import { KsefClient } from './ksef/client.ts';
+import { claimSync, executeSync, startDueSyncs, type SyncDeps } from './ksef/sync.ts';
+import { VaultError, openToken, parseKeyList, sealToken } from './ksef/token-vault.ts';
 
 declare const Deno: { env: { get(name: string): string | undefined } };
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 
 export const env = (name: string, fallback?: string): string => {
   const v = Deno.env.get(name) ?? fallback;
-  if (v === undefined || v === '') throw new HttpError(500, 'not_configured', `Brak zmiennej środowiskowej ${name} (patrz docs/09_AI_I_OCR.md).`);
+  if (v === undefined || v === '') throw new HttpError(500, 'not_configured', `Brak zmiennej środowiskowej ${name} (patrz supabase/functions/README.md).`);
   return v;
 };
 
@@ -196,3 +201,107 @@ export function buildPushDeps(): PushDeps {
 }
 
 export const cronSecret = (): string | undefined => Deno.env.get('CRON_SECRET');
+
+// --- KSeF ---------------------------------------------------------------------------------------
+
+/** Klucze szyfrujące token (pierwszy = do zapisu, kolejne = tylko do odczytu starych zapisów). */
+function ksefKeys(): string[] {
+  const v = Deno.env.get('KSEF_TOKEN_KEY');
+  if (!v) throw new VaultError('bad_key', 'Brak zmiennej środowiskowej KSEF_TOKEN_KEY.');
+  return parseKeyList(v);
+}
+
+function ksefSyncCore(admin: Admin): SyncDeps & { db: SyncDeps['db'] & { dueTenants(limit: number): Promise<string[]> } } {
+  const rpc = async (fn: string, args: Record<string, unknown>) => {
+    const { data, error } = await admin.rpc(fn, args);
+    if (error) throw error;
+    return data;
+  };
+  return {
+    db: {
+      async claim(tenantId, trigger) {
+        return (await rpc('claim_ksef_sync', { p_tenant: tenantId, p_trigger: trigger })) as Awaited<ReturnType<SyncDeps['db']['claim']>>;
+      },
+      async knownNumbers(tenantId, numbers) {
+        return ((await rpc('ksef_known_numbers', { p_tenant: tenantId, p_numbers: numbers })) as string[] | null) ?? [];
+      },
+      async importInvoice(tenantId, ksefNumber, payload, xml, sha256) {
+        return (await rpc('import_ksef_invoice', { p_tenant: tenantId, p_ksef_number: ksefNumber, p_invoice: payload, p_xml: xml, p_xml_sha256: sha256 })) as
+          { status: 'created' | 'linked' | 'exists'; document_id: string };
+      },
+      async finish(a) {
+        await rpc('finish_ksef_sync', {
+          p_run: a.runId, p_status: a.status, p_listed: a.listed, p_imported: a.imported, p_linked: a.linked, p_skipped: a.skipped,
+          p_failed: a.failed, p_error: a.error, p_cursor: a.cursor, p_auth_failed: a.authFailed, p_retry_after_sec: a.retryAfterSec,
+        });
+      },
+      async dueTenants(limit) {
+        return ((await rpc('due_ksef_tenants', { p_limit: limit })) as { tenant_id: string }[] | null ?? []).map((r) => r.tenant_id);
+      },
+    },
+    openToken: (ciphertext, tenantId) => openToken(ciphertext, ksefKeys(), tenantId),
+    makeApi: (environment) => new KsefClient({ environment, fetch: (url, init) => fetch(url, init) }),
+    now: () => Date.now(),
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    log,
+  };
+}
+
+export function buildKsefSyncDeps(): KsefSyncDeps {
+  const admin = adminClient();
+  return {
+    auth: userAuth(admin),
+    db: {
+      async isManager(tenantId, userId) {
+        const { data, error } = await admin.from('memberships').select('role').eq('tenant_id', tenantId).eq('user_id', userId).in('role', ['owner', 'manager']).maybeSingle();
+        if (error) throw error;
+        return Boolean(data);
+      },
+    },
+    sync: ksefSyncCore(admin),
+    waitUntil,
+  };
+}
+
+export function buildKsefConnectDeps(): ConnectDeps {
+  const admin = adminClient();
+  const core = ksefSyncCore(admin);
+  return {
+    auth: userAuth(admin),
+    db: {
+      async getTenant(id) {
+        const { data, error } = await admin.from('tenants').select('id, nip').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data;
+      },
+      async isOwner(tenantId, userId) {
+        const { data, error } = await admin.from('memberships').select('role').eq('tenant_id', tenantId).eq('user_id', userId).eq('role', 'owner').maybeSingle();
+        if (error) throw error;
+        return Boolean(data);
+      },
+      async saveConnection(a) {
+        const { error } = await admin.rpc('save_ksef_connection', {
+          p_tenant: a.tenantId, p_user: a.userId, p_environment: a.environment, p_nip: a.nip,
+          p_ciphertext: a.ciphertext, p_hint: a.hint, p_import_from: a.importFrom,
+        });
+        if (error) throw error;
+      },
+    },
+    sealToken: (plain, tenantId) => sealToken(plain, ksefKeys(), tenantId),
+    makeApi: core.makeApi,
+    async startFirstSync(tenantId) {
+      const claim = await claimSync(core, tenantId, 'connect');
+      if (!claim.claimed) return false;
+      waitUntil(executeSync(core, tenantId, claim));
+      return true;
+    },
+    now: () => Date.now(),
+    log,
+  };
+}
+
+/** Dla harmonogramu: uruchamia automatyczne synchronizacje firm, którym się należą. */
+export function buildCronKsef(): { startDue(): Promise<unknown> } {
+  const core = ksefSyncCore(adminClient());
+  return { startDue: () => startDueSyncs(core, waitUntil, 3) };
+}
