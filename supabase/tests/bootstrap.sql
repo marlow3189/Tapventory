@@ -32,6 +32,7 @@ $$;
 -- Schemat na rozszerzenia (tak jak w Supabase) + rozszerzenia uzywane przez migracje.
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
+create extension if not exists pg_trgm with schema extensions;   -- dopasowanie pozycji faktur (podobienstwo nazw)
 
 -- ----------------------------------------------------------------------------
 -- Schemat auth: tabela uzytkownikow i funkcje odczytujace token JWT.

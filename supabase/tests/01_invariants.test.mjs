@@ -55,10 +55,12 @@ test('powierzchnia RPC: dokładnie te funkcje są wykonywalne przez zalogowanych
     'can_invite_role', 'can_manage', 'can_manage_billing', 'can_manage_managers',
     'is_member', 'is_owner', 'is_valid_nip', 'my_role', 'owners_count', 'path_tenant',
     'shares_tenant_with',
+    'normalize_name', 'paths_in_tenant',
     // RPC wołane przez aplikację
-    'accept_invite', 'accept_invite_code', 'create_invite', 'create_tenant',
-    'delete_account', 'delete_tenant', 'get_invite_preview', 'revoke_invite',
-    'set_billing_flag', 'set_manager_flag', 'set_tenant_nip',
+    'accept_invite', 'accept_invite_code', 'create_invite', 'create_photo_document', 'create_tenant',
+    'delete_account', 'delete_tenant', 'get_invite_preview', 'match_products', 'post_document',
+    'retry_document', 'revoke_invite', 'set_billing_flag', 'set_manager_flag', 'set_tenant_nip',
+    'unpost_document',
   ].sort();
   const rows = await q(`
     select p.proname from pg_proc p
@@ -78,11 +80,13 @@ test('macierz uprawnień do tabel dla zalogowanych jest dokładnie taka, jak zap
     audit_log: 'SELECT',
     catalog_items: 'SELECT',
     document_lines: 'DELETE,INSERT,SELECT,UPDATE',
+    document_overview: 'SELECT',
     documents: 'DELETE,INSERT,SELECT,UPDATE',
     memberships: 'DELETE,SELECT',            // + UPDATE tylko na 3 kolumnach (niżej)
     movement_feed: 'SELECT',
     product_overview: 'SELECT',
     product_stock: 'SELECT',
+    product_aliases: 'DELETE,INSERT,SELECT,UPDATE',
     products: 'DELETE,INSERT,SELECT,UPDATE',
     profiles: 'SELECT',                       // + UPDATE tylko display_name, phone
     projects: 'DELETE,INSERT,SELECT,UPDATE',

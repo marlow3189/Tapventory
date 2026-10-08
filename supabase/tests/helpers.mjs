@@ -121,9 +121,11 @@ export async function signUp(db, { email, name = 'Test User', confirmed = true, 
  * Gdy potrzeba kilku zapytan w jednej transakcji: tx(async q => { ... }).
  */
 export function asUser(db, user, { role = 'authenticated' } = {}) {
+  // Token backendu (service_role) w prawdziwym Supabase NIE ma claimu `sub` -
+  // dlatego auth.uid() jest wtedy NULL. Odtwarzamy to wiernie.
   const claims = JSON.stringify({
-    sub: user.id,
-    email: user.email,
+    ...(user.id ? { sub: user.id } : {}),
+    ...(user.email ? { email: user.email } : {}),
     role,
     aud: 'authenticated',
   });
@@ -165,7 +167,7 @@ export function asAnon(db) {
 
 /** Zapytanie jako backend (service_role) - omija RLS, tak jak Edge Functions. */
 export function asService(db) {
-  return asUser(db, { id: randomUUID(), email: 'service@internal' }, { role: 'service_role' });
+  return asUser(db, { id: null, email: null }, { role: 'service_role' });
 }
 
 // ----------------------------------------------------------------------------
