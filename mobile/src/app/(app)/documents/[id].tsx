@@ -315,7 +315,7 @@ function Editor({ doc, lines, linesLoading }: { doc: DocumentRow; lines: Documen
       scroll
       headerRight={
         <>
-          <HeaderButton icon="image-outline" label="Pokaż zdjęcie faktury" onPress={() => setViewer(true)} />
+          {doc.file_paths.length > 0 ? <HeaderButton icon="image-outline" label="Pokaż zdjęcie faktury" onPress={() => setViewer(true)} /> : null}
           {!posted ? (
             <HeaderButton
               icon="trash-outline"
@@ -353,7 +353,11 @@ function Editor({ doc, lines, linesLoading }: { doc: DocumentRow; lines: Documen
     >
       <View style={styles.statusRow}>
         <Pill label={st.label} tone={st.tone} />
-        {doc.ai_model ? (
+        {doc.source === 'ksef' ? (
+          <Text variant="footnote" color="tertiary">
+            Pobrana z KSeF
+          </Text>
+        ) : doc.ai_model ? (
           <Text variant="footnote" color="tertiary">
             Odczyt AI{doc.ai_confidence !== null ? ` · pewność ${doc.ai_confidence}%` : ''}
           </Text>
@@ -369,6 +373,12 @@ function Editor({ doc, lines, linesLoading }: { doc: DocumentRow; lines: Documen
         ) : null}
       </View>
 
+      {doc.ksef_number ? (
+        <Text variant="footnote" color="secondary" selectable>
+          {doc.source === 'ksef' ? 'Numer KSeF' : 'Potwierdzona w KSeF, numer'}: {doc.ksef_number}
+        </Text>
+      ) : null}
+
       {!posted && (warnings.length > 0 || doc.ai_warnings.length > 0) ? (
         <View style={[styles.warnBox, { backgroundColor: c.fill }]}>
           {warnings.map((w) => (
@@ -381,9 +391,9 @@ function Editor({ doc, lines, linesLoading }: { doc: DocumentRow; lines: Documen
           ))}
           {doc.ai_warnings.map((w, i) => (
             <View key={`ai-${i}`} style={styles.warnRow}>
-              <Icon name="sparkles-outline" size={18} color={c.violet} />
+              <Icon name={doc.source === 'ksef' ? 'shield-checkmark-outline' : 'sparkles-outline'} size={18} color={c.violet} />
               <Text variant="callout" style={{ flex: 1 }}>
-                AI: {w.text}
+                {doc.source === 'ksef' ? 'KSeF' : 'AI'}: {w.text}
               </Text>
             </View>
           ))}

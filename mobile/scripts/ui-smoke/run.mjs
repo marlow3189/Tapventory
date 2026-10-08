@@ -10,7 +10,7 @@ import http from 'node:http';
 import { readFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { IDS, installMock, sessionPayload } from './mock-backend.mjs';
+import { IDS, KSEF_STATES, installMock, sessionPayload } from './mock-backend.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dist = path.resolve(process.argv[2] ?? path.join(here, '../../dist'));
@@ -50,7 +50,7 @@ const browser = await chromium.launch({
 const problems = [];
 let shot = 0;
 
-async function newPage({ role = 'owner', loggedIn = true, scheme = 'light', width = 390, height = 844 } = {}) {
+async function newPage({ role = 'owner', loggedIn = true, scheme = 'light', width = 390, height = 844, rpc = {} } = {}) {
   const context = await browser.newContext({
     viewport: { width, height },
     deviceScaleFactor: 2,
@@ -69,7 +69,7 @@ async function newPage({ role = 'owner', loggedIn = true, scheme = 'light', widt
     if (/favicon|Failed to load resource.*(404|net::ERR)|realtime|WebSocket/i.test(t)) return;
     problems.push(`[console.error] ${t.slice(0, 300)}`);
   });
-  await installMock(page, { role, calls });
+  await installMock(page, { role, calls, overrides: { rpc } });
   if (loggedIn) {
     await page.addInitScript((s) => {
       localStorage.setItem('tapventory-auth', JSON.stringify(s));
@@ -227,6 +227,38 @@ async function step(title, fn) {
     await visit(page, '/settings', 'Plan i limity');
     await snap(page, 'settings');
   });
+  await step('faktura z KSeF: bez zdjęcia, z numerem KSeF', async () => {
+    await visit(page, `/documents/${IDS.docKsef}`, 'Pobrana z KSeF');
+    await page.getByText('5265877635-20250826-0100001AF629-AF').waitFor();
+    await page.getByText('KSeF: Pozycje oznaczone jako pomijane').waitFor();
+    if ((await page.getByRole('button', { name: 'Pokaż zdjęcie faktury' }).count()) > 0) throw new Error('faktura z KSeF nie ma zdjęcia, a przycisk podglądu jest widoczny');
+    await snap(page, 'document-ksef');
+  });
+  await step('faktury: baner „Podłącz KSeF" i faktura z KSeF na liście', async () => {
+    await visit(page, '/documents', 'Podłącz KSeF — faktury wpadną same');
+    await page.getByText('Auto-Części Kowalski').first().waitFor();
+    await snap(page, 'documents-ksef-banner');
+  });
+  await step('ustawienia: wiersz integracji KSeF', async () => {
+    await visit(page, '/settings', 'Integracje');
+    await page.getByText('Podłącz raz, a faktury wpadają same').waitFor();
+    await snap(page, 'settings-ksef-row');
+  });
+  await step('KSeF: kreator (niepodłączony) — walidacja tokenu i połączenie', async () => {
+    await visit(page, '/settings/ksef', 'Jak podłączyć');
+    await page.getByText('Zaznacz TYLKO „Przeglądanie faktur”').waitFor();
+    await snap(page, 'ksef-wizard');
+    await page.getByRole('button', { name: 'Połącz z KSeF' }).click();
+    await page.getByText('Wklej token skopiowany z KSeF.').waitFor();
+    await page.getByPlaceholder('Wklej tutaj cały token').fill('krotki');
+    await page.getByRole('button', { name: 'Połącz z KSeF' }).click();
+    await page.getByText('Token jest za krótki').waitFor();
+    await page.getByPlaceholder('Wklej tutaj cały token').fill('20260105-EC-0123456789-ABCDEF0123-45|nip-5260250995|0a1b2c3d4e5f6071');
+    await page.getByRole('button', { name: 'Połącz z KSeF' }).click();
+    await page.getByText('Połączono z KSeF').waitFor();
+    if (!calls.some((c) => c.includes('/functions/v1/ksef-connect'))) throw new Error('funkcja ksef-connect nie została wywołana');
+    await snap(page, 'ksef-connected-toast');
+  });
   await step('asystent AI', async () => {
     await visit(page, '/assistant', 'Asystent AI');
     await page.getByText('Jak zdjąć towar z magazynu?').click();
@@ -241,6 +273,48 @@ async function step(title, fn) {
     await visit(page, '/nie-ma-takiej', 'Tej strony nie ma');
   });
   console.log(`  (żądań do atrapy backendu: ${calls.length})`);
+  await context.close();
+}
+
+// ---- 2b. KSeF: stany połączony i błąd ---------------------------------------------------------
+{
+  const { page, context, calls } = await newPage({ rpc: { get_ksef_status: KSEF_STATES.connected } });
+  await step('KSeF: połączony — stan, historia, synchronizacja ręczna', async () => {
+    await visit(page, '/settings/ksef', 'Synchronizuj teraz');
+    await page.getByText('Pobrano 3 nowe faktury, dopięto numer KSeF w 1 istniejącej fakturze').waitFor();
+    await page.getByText('Pobrano 12 nowych faktur — to jeszcze nie wszystko').waitFor();
+    await page.getByText('Brak nowych faktur').waitFor();
+    await page.getByText('Odłącz KSeF').waitFor();
+    await snap(page, 'ksef-connected');
+    await page.getByRole('button', { name: 'Synchronizuj teraz' }).click();
+    await page.getByText('Pobieranie z KSeF rozpoczęte').waitFor();
+    if (!calls.some((c) => c.includes('/functions/v1/ksef-sync'))) throw new Error('funkcja ksef-sync nie została wywołana');
+  });
+  await step('faktury: przy działającym KSeF brak banera', async () => {
+    await visit(page, '/documents', 'Hurtownia ABC');
+    if ((await page.getByText('Podłącz KSeF — faktury wpadną same').count()) > 0) throw new Error('baner KSeF widoczny mimo połączenia');
+  });
+  await context.close();
+}
+{
+  const { page, context } = await newPage({ rpc: { get_ksef_status: KSEF_STATES.error } });
+  await step('KSeF: błąd połączenia — komunikat i formularz nowego tokenu', async () => {
+    await visit(page, '/settings/ksef', 'Połączenie z KSeF przestało działać');
+    await page.getByText('Token został unieważniony w KSeF').first().waitFor();
+    await page.getByPlaceholder('Wklej tutaj cały token').waitFor();
+    await snap(page, 'ksef-error');
+  });
+  await step('faktury: baner „odnów połączenie"', async () => {
+    await visit(page, '/documents', 'Połączenie z KSeF wymaga odnowienia');
+  });
+  await context.close();
+}
+{
+  const { page, context } = await newPage({ role: 'employee' });
+  await step('pracownik: ekran KSeF przekierowuje na start', async () => {
+    await visit(page, '/settings/ksef', 'Rękawice nitrylowe L');
+    if (page.url().includes('/settings/ksef')) throw new Error('pracownik nie powinien widzieć ekranu KSeF');
+  });
   await context.close();
 }
 

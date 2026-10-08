@@ -5,6 +5,7 @@ import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { Redirect, useRouter } from 'expo-router';
 import { Button, Chips, EmptyState, ErrorState, Icon, Pill, RowSkeleton, Screen, Text, Touchable } from '@/components/ui';
 import { useDocuments } from '@/lib/api/documents';
+import { useKsefStatus } from '@/lib/api/ksef';
 import { DOC_STATUS } from '@/lib/doc-status';
 import { formatDate, formatMoney, timeAgo } from '@/lib/format';
 import { useTenant } from '@/lib/tenant';
@@ -30,6 +31,7 @@ export default function Documents() {
       padded={false}
       headerRight={<Button title="Skanuj" icon="scan-outline" size="s" onPress={() => router.push('/documents/scan')} />}
     >
+      <KsefBanner />
       <Chips
         options={[
           { value: 'todo', label: 'Do zrobienia' },
@@ -95,7 +97,33 @@ export default function Documents() {
   );
 }
 
+/** Zachęta do podłączenia KSeF (znika, gdy połączenie działa). */
+function KsefBanner() {
+  const c = useColors();
+  const router = useRouter();
+  const ksef = useKsefStatus();
+  if (!ksef.data || ksef.data.status === 'connected') return null;
+  const broken = ksef.data.status === 'error';
+  return (
+    <Touchable
+      onPress={() => router.push('/settings/ksef')}
+      accessibilityLabel={broken ? 'Połączenie z KSeF wymaga odnowienia' : 'Podłącz KSeF'}
+      style={[styles.banner, { backgroundColor: c.fill, borderColor: broken ? c.danger : c.borderLight }]}
+    >
+      <Icon name={broken ? 'alert-circle' : 'shield-checkmark-outline'} size={22} color={broken ? c.danger : c.primary} />
+      <View style={{ flex: 1 }}>
+        <Text bold>{broken ? 'Połączenie z KSeF wymaga odnowienia' : 'Podłącz KSeF — faktury wpadną same'}</Text>
+        <Text variant="footnote" color="secondary">
+          {broken ? 'Wklej nowy token, a pobieranie ruszy dalej.' : 'Bez zdjęć i przepisywania. Konfiguracja zajmuje ok. 5 minut.'}
+        </Text>
+      </View>
+      <Icon name="chevron-forward" size={18} color={c.textTertiary} />
+    </Touchable>
+  );
+}
+
 const styles = StyleSheet.create({
+  banner: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: spacing.l, marginTop: spacing.s, marginBottom: spacing.s, padding: spacing.m, borderRadius: 14, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.l, paddingVertical: 12 },
   icon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
 });

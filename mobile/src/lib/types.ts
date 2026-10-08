@@ -103,7 +103,7 @@ export type NotificationRow = {
   kind: 'low_stock' | 'request_new' | 'request_status' | 'document_ready' | 'count_due' | 'system';
   title: string;
   body: string | null;
-  data: { request_id?: string; product_id?: string; document_id?: string };
+  data: { request_id?: string; product_id?: string; document_id?: string; screen?: 'ksef' | 'documents' };
   read_at: string | null;
   created_at: string;
 };
@@ -118,6 +118,7 @@ export type DocumentRow = {
   supplier_name: string | null;
   supplier_nip: string | null;
   invoice_number: string | null;
+  ksef_number: string | null;
   issue_date: string | null;
   currency: string;
   total_net: number | string | null;

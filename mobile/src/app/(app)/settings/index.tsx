@@ -9,10 +9,12 @@ import { Button, Chips, ListRow, Pill, Screen, Section, Text, useDialogs } from 
 import {
   deleteAccount, deleteTenant, setTenantNip, updateTenantContact, useAiQuota, useDashboard, useSettings, useUpdateSettings, type TenantSettings,
 } from '@/lib/api/misc';
+import { useKsefStatus } from '@/lib/api/ksef';
 import { useCreateProject, useProjects, useSetProjectStatus } from '@/lib/api/products';
 import { useAuth } from '@/lib/auth';
 import { useAiConsent } from '@/lib/consent';
 import { formatDate } from '@/lib/format';
+import { KSEF_STATUS_VIEW } from '@/lib/ksef';
 import { LINKS } from '@/lib/links';
 import { formatNip, isValidNip, normalizeNip } from '@/lib/nip';
 import { PLANS, planName, type PlanId } from '@/lib/plans';
@@ -42,6 +44,7 @@ export default function Settings() {
   const setProjectStatus = useSetProjectStatus();
   const consent = useAiConsent();
   const install = useInstallPrompt();
+  const ksef = useKsefStatus();
 
   const plan = (dashboard.data?.plan ?? membership?.tenants?.plan ?? 'solo') as PlanId;
   const trial = dashboard.data?.trial_days_left;
@@ -144,6 +147,19 @@ export default function Settings() {
         />
         <ListRow icon="people-outline" title="Zespół i zaproszenia" onPress={() => router.push('/team')} last />
       </Section>
+
+      {isManager ? (
+        <Section title="Integracje" footer="Faktury zakupu z państwowego KSeF trafiają do Tapventory same — bez zdjęć i przepisywania.">
+          <ListRow
+            icon="shield-checkmark-outline"
+            title="KSeF"
+            subtitle={ksef.data?.status === 'connected' ? 'Faktury zakupu pobierają się automatycznie' : 'Podłącz raz, a faktury wpadają same'}
+            right={ksef.data ? <Pill label={KSEF_STATUS_VIEW[ksef.data.status].label} tone={KSEF_STATUS_VIEW[ksef.data.status].tone} /> : undefined}
+            onPress={() => router.push('/settings/ksef')}
+            last
+          />
+        </Section>
+      ) : null}
 
       <Section
         title="Plan i limity"

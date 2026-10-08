@@ -73,7 +73,7 @@ export function validateDocument(doc: DocHeader, lines: DocLine[], today: Date =
   if (expectedNet !== null && lines.length > 0) {
     const sum = sumNet(lines);
     if (!totalsMatch(expectedNet, sum)) {
-      w.push({ code: 'total_mismatch', severity: 'warn', text: `Suma pozycji (${sum.toFixed(2)}) różni się od sumy na fakturze (${expectedNet.toFixed(2)}). Możliwa pomyłka odczytu.` });
+      w.push({ code: 'total_mismatch', severity: 'warn', text: `Suma pozycji (${sum.toFixed(2).replace('.', ',')}) różni się od sumy na fakturze (${expectedNet.toFixed(2).replace('.', ',')}). Możliwa pomyłka odczytu.` });
     }
   }
   const low = active.filter((l) => (l.ai_confidence ?? 100) < 60).length;

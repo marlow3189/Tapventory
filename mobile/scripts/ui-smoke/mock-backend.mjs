@@ -16,6 +16,7 @@ export const IDS = {
   doc: '44444444-4444-4444-8444-444444444444',
   docPosted: '44444444-4444-4444-8444-444444444445',
   docProcessing: '44444444-4444-4444-8444-444444444446',
+  docKsef: '44444444-4444-4444-8444-444444444447',
   req1: '55555555-5555-4555-8555-555555555551',
   req2: '55555555-5555-4555-8555-555555555552',
   req3: '55555555-5555-4555-8555-555555555553',
@@ -88,12 +89,17 @@ export function buildData(role = 'owner') {
     supplier_nip: '5260250995', invoice_number: 'FV/2026/10/0451', issue_date: '2026-10-05', currency: 'PLN', total_net: 160.5, total_gross: 197.42,
     file_paths: [`${IDS.tenant}/documents/${id}/page-1.jpg`], page_count: 1, error_message: null, ai_model: 'claude-haiku-5-5', ai_confidence: 91,
     ai_warnings: [{ code: 'low_conf', text: 'Pozycja „Transport” odczytana z małą pewnością.' }], revision: 1, created_by_name: 'Anna Kowalska',
-    posted_at: null, created_at: iso(30), line_count: 3, unmatched_count: 1, ...o,
+    posted_at: null, created_at: iso(30), line_count: 3, unmatched_count: 1, ksef_number: null, ...o,
   });
   const documents = [
     mkDoc(IDS.doc, 'draft', {}),
     mkDoc(IDS.docPosted, 'posted', { invoice_number: 'FV/2026/09/0388', supplier_name: 'Auto-Części Kowalski', posted_at: iso(3000), unmatched_count: 0, created_at: iso(3100) }),
     mkDoc(IDS.docProcessing, 'processing', { supplier_name: null, invoice_number: null, line_count: 0, unmatched_count: 0, created_at: iso(1) }),
+    mkDoc(IDS.docKsef, 'draft', {
+      source: 'ksef', supplier_name: 'Auto-Części Kowalski', invoice_number: 'FV/KSEF/77/2026', file_paths: [], page_count: null, ai_model: null, ai_confidence: null,
+      ksef_number: '5265877635-20250826-0100001AF629-AF', created_by_name: null, created_at: iso(12),
+      ai_warnings: [{ code: 'ksef_skipped_lines', text: 'Pozycje oznaczone jako pomijane (transport, rabat, usługa): 1. Sprawdź, czy któraś nie jest towarem.' }],
+    }),
   ];
   const notifications = [
     { id: 'n1', kind: 'low_stock', title: 'Płyn do szyb 5 l: poniżej minimum', body: 'Zostało 1 szt., minimum 3.', data: { product_id: pid(2) }, read_at: null, created_at: iso(15) },
@@ -121,7 +127,9 @@ export function buildData(role = 'owner') {
     ],
     notifications,
     document_overview: documents,
-    document_lines: docLines,
+    document_lines: docLines.concat([
+      { id: 'k1', document_id: IDS.docKsef, line_no: 1, raw_name: 'Filtr oleju Bosch', qty: 6, unit: 'szt.', unit_price_net: 21.5, total_net: 129, vat_rate: 23, ean: '4047024120112', product_id: pid(3), match_confidence: 99, ai_confidence: null, skip: false, project_id: null },
+    ]),
     team_members: team,
     team_invites: [{ id: 'i1', email: 'ewa@warsztat.pl', role: 'employee', status: 'pending', expires_at: iso(-60 * 24 * 5), invited_by_name: 'Anna Kowalska' }],
     suppliers: [{ id: IDS.supplier, name: 'Hurtownia ABC', nip: '5260250995' }],
@@ -134,6 +142,7 @@ export function buildData(role = 'owner') {
       should_ask_count: false,
       record_stock_check: { expected: 2, counted: 3, diff: 1, movement_id: 'mv9', repeated: false },
       post_document: 2,
+      get_ksef_status: { status: 'disconnected', running: false, runs: [] },
       match_products: [],
     },
   };
@@ -182,6 +191,8 @@ export async function installMock(page, { role = 'owner', calls = [], overrides 
     if (p.startsWith('/functions/v1/')) {
       if (p.endsWith('/assistant')) return json({ reply: 'Aby zdjąć towar, otwórz produkt i dotknij „Zdejmij”. Możesz też zeskanować kod kreskowy.' });
       if (p.endsWith('/barcode-lookup')) return json({ found: true, name: 'Mleko UHT 3,2% 1 l' });
+      if (p.endsWith('/ksef-connect')) return json({ ok: true, status: 'connected', sync: 'started' });
+      if (p.endsWith('/ksef-sync')) return json({ ok: true, status: 'started' }, 202);
       return json({ ok: true });
     }
 
@@ -234,3 +245,21 @@ export async function installMock(page, { role = 'owner', calls = [], overrides 
 }
 
 export { PNG_1PX };
+
+/** Gotowe odpowiedzi get_ksef_status do testów ekranu KSeF. */
+export const KSEF_STATES = {
+  connected: {
+    status: 'connected', environment: 'prod', nip: '5260250995', token_hint: 'a1b2', import_from: '2026-01-01', connected_at: new Date(Date.now() - 5 * 86400_000).toISOString(),
+    last_sync_at: new Date(Date.now() - 40 * 60_000).toISOString(), last_attempt_at: new Date(Date.now() - 40 * 60_000).toISOString(), last_error: null, running: false,
+    runs: [
+      { id: 3, trigger: 'auto', status: 'ok', started_at: new Date(Date.now() - 40 * 60_000).toISOString(), finished_at: null, listed: 4, imported: 3, linked: 1, skipped: 0, failed: 0, error: null },
+      { id: 2, trigger: 'manual', status: 'partial', started_at: new Date(Date.now() - 5 * 3600_000).toISOString(), finished_at: null, listed: 20, imported: 12, linked: 0, skipped: 0, failed: 0, error: 'Pobieranie przerwano po przekroczeniu limitu czasu — dokończymy przy następnej synchronizacji.' },
+      { id: 1, trigger: 'connect', status: 'ok', started_at: new Date(Date.now() - 5 * 86400_000).toISOString(), finished_at: null, listed: 0, imported: 0, linked: 0, skipped: 0, failed: 0, error: null },
+    ],
+  },
+  error: {
+    status: 'error', environment: 'prod', nip: '5260250995', token_hint: 'a1b2', import_from: '2026-01-01', connected_at: null, last_sync_at: null, last_attempt_at: null,
+    last_error: 'Token został unieważniony w KSeF. Wygeneruj nowy token i połącz ponownie.', running: false,
+    runs: [{ id: 5, trigger: 'auto', status: 'error', started_at: new Date(Date.now() - 3600_000).toISOString(), finished_at: null, listed: 0, imported: 0, linked: 0, skipped: 0, failed: 0, error: 'Token został unieważniony w KSeF.' }],
+  },
+};
