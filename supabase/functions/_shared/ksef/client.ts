@@ -285,7 +285,7 @@ export function authFailure(code: number | undefined, description?: string, deta
     case 450:
       if (has(/kontek/i)) return new KsefError('token_rejected', 'Ten token należy do innej firmy. Sprawdź, czy NIP w Tapventory zgadza się z NIP-em, dla którego wygenerowano token.', extra);
       if (has(/unieważnion/i)) return new KsefError('token_rejected', 'Token został unieważniony w KSeF. Wygeneruj nowy token i połącz ponownie.', extra);
-      if (has(/nieaktywn/i)) return new KsefError('token_rejected', 'Token jest nieaktywny (jeszcze się nie aktywował albo wygasł). Wygeneruj nowy token.', extra);
+      if (has(/nieaktywn/i)) return new KsefError('token_rejected', 'Token jest jeszcze nieaktywny (KSeF aktywuje świeży token po chwili) albo wygasł. Odczekaj minutę i spróbuj ponownie; jeśli to nie pomoże, wygeneruj nowy token.', extra);
       if (has(/czas tokena|wyzwanie/i)) return new KsefError('unavailable', 'Chwilowy błąd logowania do KSeF. Spróbuj ponownie za chwilę.', extra);
       if (has(/szyfrowani/i)) return new KsefError('bad_response', 'KSeF nie przyjął zaszyfrowanego tokenu — to błąd po naszej stronie, zgłoś go nam.', extra);
       return new KsefError('token_rejected', 'KSeF nie rozpoznał tokenu. Skopiuj go ponownie w całości (bez spacji na końcach).', extra);

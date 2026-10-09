@@ -24,7 +24,7 @@ const STEPS: { title: string; text: string }[] = [
   { title: 'Wybierz swoją firmę', text: 'Po zalogowaniu wybierz kontekst — firmę, której faktury chcesz pobierać (NIP musi być ten sam, co w Tapventory).' },
   { title: 'Utwórz nowy token', text: 'Znajdź sekcję „Tokeny” (w menu uprawnień i dostępu) i wybierz utworzenie tokena. Nazwy w menu mogą się różnić — szukaj słowa „token”.' },
   { title: 'Zaznacz TYLKO „Przeglądanie faktur”', text: 'To jedyne uprawnienie, jakiego potrzebujemy. Nie zaznaczaj wystawiania faktur ani zarządzania uprawnieniami — dzięki temu Tapventory technicznie nie może niczego wystawić w Twoim imieniu. W opisie wpisz „Tapventory”.' },
-  { title: 'Skopiuj token', text: 'KSeF pokaże go tylko raz. Skopiuj go w całości (przycisk „Kopiuj” albo zaznacz i skopiuj) i wklej poniżej.' },
+  { title: 'Skopiuj token', text: 'KSeF pokaże go tylko raz. Skopiuj go w całości (przycisk „Kopiuj” albo zaznacz i skopiuj) i wklej poniżej. Świeży token aktywuje się po chwili — jeśli Tapventory go odrzuci, odczekaj minutę i spróbuj ponownie.' },
 ];
 
 export default function KsefScreen() {
