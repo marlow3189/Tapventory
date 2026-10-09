@@ -5,23 +5,24 @@
   "description": "Tapventory - magazyn i zakupy dla firm uslugowych (Expo + Supabase)",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
   },
   "scripts": {
     "db:test": "node --test \"supabase/tests/*.test.mjs\"",
     "fn:test": "node --test \"supabase/functions/tests/*.test.ts\"",
-    "fn:typecheck": "mobile/node_modules/.bin/tsc -p supabase/functions/tsconfig.json",
+    "fn:typecheck": "node mobile/node_modules/typescript/bin/tsc -p supabase/functions/tsconfig.json",
     "eval:generate": "node eval/generate.mjs",
     "eval:run": "node eval/run.mjs",
     "eval:dry": "node eval/run.mjs --dry",
     "eval:test": "node --test \"eval/tests/*.test.ts\"",
-    "eval:typecheck": "mobile/node_modules/.bin/tsc -p eval/tsconfig.json",
+    "eval:typecheck": "node mobile/node_modules/typescript/bin/tsc -p eval/tsconfig.json",
     "fn:deno-check": "npx --yes deno@2.9.6 check --no-config --node-modules-dir=none \"supabase/functions/*/index.ts\"",
     "fn:deno-test": "npx --yes deno@2.9.6 test --no-config --node-modules-dir=none --allow-all --no-check supabase/functions/tests/"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "0.127.0",
     "pg": "^8.23.1",
-    "playwright": "1.56.1"
+    "playwright": "1.56.1",
+    "supabase": "2.120.0"
   }
 }

@@ -17,7 +17,7 @@ env:
 
 jobs:
   baza:
-    name: Baza (migracje + 112 testów SQL)
+    name: Baza (migracje + testy SQL na PostgreSQL 17)
     runs-on: ubuntu-latest
     services:
       postgres:
