@@ -23,3 +23,6 @@ coverage/
 # Zestaw ewaluacyjny: wygenerowane obrazy i wyniki (odtwarzalne poleceniami npm run eval:generate / eval:run)
 eval/data/
 eval/results/
+
+# Sekrety funkcji (lokalne)
+supabase/functions/.env

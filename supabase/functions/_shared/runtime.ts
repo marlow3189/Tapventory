@@ -5,7 +5,7 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@0.127.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.117.3';
 import { HttpError } from './http.ts';
-import { AnthropicExtractor } from './providers/anthropic.ts';
+import { AnthropicExtractor, type AnthropicLike } from './providers/anthropic.ts';
 import { AnthropicChat } from './providers/anthropic-chat.ts';
 import type { Effort } from './provider.ts';
 import { ReserveError, type ProcessDeps } from '../process-document/handler.ts';
@@ -57,7 +57,8 @@ const effort = (name: string, fallback: Effort): Effort => {
 
 export function buildProcessDeps(): ProcessDeps {
   const admin = adminClient();
-  const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY'), maxRetries: 2, timeout: 110_000 });
+  // Rzutowanie na nasz wąski interfejs AnthropicLike: kod potoku (i jego testy w Node) nie zna ogromnych typów SDK.
+  const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY'), maxRetries: 2, timeout: 110_000 }) as unknown as AnthropicLike;
   const rpc = async (fn: string, args: Record<string, unknown>) => {
     const { data, error } = await admin.rpc(fn, args);
     if (error) throw error;
@@ -120,7 +121,7 @@ export function buildProcessDeps(): ProcessDeps {
 
 export function buildAssistantDeps(): AssistantDeps {
   const admin = adminClient();
-  const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY'), maxRetries: 1, timeout: 50_000 });
+  const anthropic = new Anthropic({ apiKey: env('ANTHROPIC_API_KEY'), maxRetries: 1, timeout: 50_000 }) as unknown as AnthropicLike;
   return {
     auth: userAuth(admin),
     db: {

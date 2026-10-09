@@ -1,0 +1,147 @@
+# ============================================================================
+# Tapventory — konfiguracja LOKALNEGO Supabase (supabase start) i wdrażania funkcji
+# ============================================================================
+# Dla juniora:
+#  * Ten plik czyta Supabase CLI. Lokalnie (supabase start) steruje całym środowiskiem;
+#    na serwerze (supabase.com) większość ustawień Auth/Storage zmieniasz w panelu —
+#    patrz docs/02_START_LOKALNY.md (sekcja „Lokalnie vs serwer”).
+#  * Plik wygenerowano na bazie szablonu `supabase init` (CLI 2.120) i okrojono do tego,
+#    co Tapventory naprawdę używa. Brakujące sekcje CLI uzupełnia wartościami domyślnymi.
+#  * Gdy po aktualizacji CLI zobaczysz błąd „failed to read config", przenieś ten plik w bok,
+#    uruchom `npx supabase init` (utworzy świeży szablon) i przepisz z tego pliku:
+#    project_id, [auth] (site_url, additional_redirect_urls, hasło), [db.seed] i sekcje [functions.*].
+#  * Sprawdzenie bez Dockera, że plik jest poprawny składniowo:  npx supabase status
+#    (poprawny plik kończy się błędem o Dockerze, niepoprawny — błędem „failed to read config").
+# ============================================================================
+
+project_id = "tapventory"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+# PostgREST oddaje maks. tyle wierszy na zapytanie; aplikacja dociąga kolejne strony sama (fetchAll).
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+# Wersja Postgresa lokalnie; ma być taka sama jak w projekcie na supabase.com
+# (Ustawienia projektu → Infrastructure → Postgres version).
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+# seed.sql (dane DEMO) ładuje się przy `supabase db reset` — wyłącznie lokalnie.
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+# potrzebne: lista zgłoszeń, czat i faktury odświeżają się na żywo
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[local_smtp]
+# lokalna „skrzynka pocztowa” (Mailpit): maile z potwierdzeniem konta i resetem hasła
+# zobaczysz pod http://127.0.0.1:54324 — nic nie wychodzi do internetu.
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+# Limity per bucket (dokumenty 10 MB, zdjęcia 5 MB) ustawia migracja 0009 — to jest tylko sufit globalny.
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+# Adres, na który wracają linki z maili. Lokalnie: serwer Expo dla przeglądarki (npx expo start --web).
+site_url = "http://localhost:8081"
+additional_redirect_urls = [
+  "tapventory://**",
+  "http://localhost:8081/**",
+  "http://127.0.0.1:8081/**",
+  "https://app.tapventory.com/**",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Lokalnie WYŁĄCZONE dla wygody (konto działa od razu po rejestracji).
+# Na serwerze (Authentication → Providers → Email) WŁĄCZ „Confirm email”.
+enable_confirmations = false
+secure_password_change = false
+max_frequency = "1s"
+otp_length = 6
+otp_expiry = 3600
+
+[auth.rate_limit]
+email_sent = 10
+sign_in_sign_ups = 30
+token_refresh = 150
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+deno_version = 2
+
+[analytics]
+# Wyłączone, bo Logflare zjada RAM i bywa kapryśne na Windows/Docker Desktop. Logi funkcji
+# widać w terminalu `supabase functions serve`.
+enabled = false
+
+# ----------------------------------------------------------------------------
+# Edge Functions
+# ----------------------------------------------------------------------------
+# verify_jwt = false: bramka Supabase nie sprawdza podpisu JWT, bo nowe projekty używają kluczy
+# asymmetrycznych (JWT Signing Keys), których starsza bramka nie obsługuje. Zamiast tego KAŻDA funkcja
+# użytkownika w pierwszej instrukcji wywołuje auth.getUser(token) i odrzuca żądanie bez ważnej sesji
+# (kod 401) — patrz bearerToken() + deps.auth.getUserId() w supabase/functions/*/handler.ts, i testy.
+# send-push i cron-tasks nie mają sesji użytkownika: chroni je nagłówek x-cron-secret (sekret CRON_SECRET).
+
+[functions.process-document]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/process-document/index.ts"
+
+[functions.assistant]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/assistant/index.ts"
+
+[functions.barcode-lookup]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/barcode-lookup/index.ts"
+
+[functions.ksef-connect]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/ksef-connect/index.ts"
+
+[functions.ksef-sync]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/ksef-sync/index.ts"
+
+[functions.send-push]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/send-push/index.ts"
+
+[functions.cron-tasks]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/cron-tasks/index.ts"

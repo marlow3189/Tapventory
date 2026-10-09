@@ -1,0 +1,127 @@
+# Ciągła integracja: każdy push i pull request sprawdza bazę, funkcje, zestaw ewaluacyjny i aplikację.
+# Dla juniora: czerwony krzyżyk przy commicie = któryś z tych kroków się nie powiódł. Kliknij w niego,
+# zobaczysz log; te same polecenia możesz uruchomić lokalnie (patrz docs/06_TESTY_I_JAKOSC.md).
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  baza:
+    name: Baza (migracje + 112 testów SQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run db:test
+
+  funkcje:
+    name: Funkcje + zestaw ewaluacyjny (testy i typy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: mobile
+      - run: npm run fn:test
+      - run: npm run fn:typecheck
+      - run: npm run eval:test
+      - run: npm run eval:typecheck
+
+  deno:
+    name: Funkcje pod prawdziwym Deno (typy + testy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run fn:deno-check
+      - run: npm run fn:deno-test
+
+  aplikacja:
+    name: Aplikacja (typy, lint, testy, eksport web/Android/iOS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      # sam eksport pakietów (bez budowania natywnego): wyłapuje błędy importów i brakujące zasoby
+      - run: node scripts/copy-wasm.mjs && npx expo export --platform web --output-dir dist-web
+      - run: npx expo export --platform android --output-dir dist-android
+      - run: npx expo export --platform ios --output-dir dist-ios
+
+  interfejs:
+    name: Test dymny interfejsu w przeglądarce (Chromium)
+    runs-on: ubuntu-latest
+    needs: [aplikacja]
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: mobile
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build:web
+        working-directory: mobile
+      - run: node mobile/scripts/ui-smoke/run.mjs mobile/dist ui-smoke-out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zrzuty-ekranow
+          path: ui-smoke-out
+          retention-days: 7

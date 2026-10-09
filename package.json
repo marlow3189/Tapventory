@@ -15,7 +15,9 @@
     "eval:run": "node eval/run.mjs",
     "eval:dry": "node eval/run.mjs --dry",
     "eval:test": "node --test \"eval/tests/*.test.ts\"",
-    "eval:typecheck": "mobile/node_modules/.bin/tsc -p eval/tsconfig.json"
+    "eval:typecheck": "mobile/node_modules/.bin/tsc -p eval/tsconfig.json",
+    "fn:deno-check": "npx --yes deno@2.9.6 check --no-config --node-modules-dir=none \"supabase/functions/*/index.ts\"",
+    "fn:deno-test": "npx --yes deno@2.9.6 test --no-config --node-modules-dir=none --allow-all --no-check supabase/functions/tests/"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "0.127.0",
