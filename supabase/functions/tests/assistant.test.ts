@@ -6,7 +6,7 @@ import { handleAssistant, sanitizeMessages, type AssistantDeps, type ChatMessage
 const TENANT = '22222222-2222-4222-8222-222222222222';
 
 function setup(over: { member?: boolean; bump?: Error; reply?: string | Error } = {}) {
-  const log: { usage: { model: string; status: string; cost: number }[]; bumped: number; seen: ChatMessage[][] } = { usage: [], bumped: 0, seen: [] };
+  const log: { usage: { model: string; status: string; cost: number }[]; bumped: number; seen: ChatMessage[][]; systems: string[] } = { usage: [], bumped: 0, seen: [], systems: [] };
   const deps: AssistantDeps = {
     auth: { getUserId: async (t) => (t === 'good' ? 'user-1' : null) },
     db: {
@@ -15,8 +15,9 @@ function setup(over: { member?: boolean; bump?: Error; reply?: string | Error } 
       logUsage: async (_t, _u, model, _i, _o, cost, status) => { log.usage.push({ model, status, cost }); },
     },
     chat: {
-      complete: async ({ messages }) => {
+      complete: async ({ messages, system }) => {
         log.seen.push(messages);
+        log.systems.push(system);
         if (over.reply instanceof Error) throw over.reply;
         return { text: over.reply ?? 'Otwórz produkt i dotknij „Zdejmij”.', model: 'claude-haiku-5-5', inputTokens: 1000, outputTokens: 50 };
       },
@@ -72,4 +73,23 @@ test('awaria modelu → 502 z czytelnym komunikatem (bez szczegółów) i wpis �
   assert.deepEqual(log.usage.map((u) => u.status), ['error']);
   const empty = setup({ reply: '   ' });
   assert.equal((await call(empty.deps, { tenant_id: TENANT, messages: [{ role: 'user', content: 'x' }] })).status, 502);
+});
+
+test('iOS: prompt bez cen i bez odesłań do płatności poza App Store (wytyczna Apple 3.1.3); Android i web — z cenami', async () => {
+  const ask = async (platform?: unknown) => {
+    const { deps, log } = setup();
+    const res = await call(deps, { tenant_id: TENANT, ...(platform === undefined ? {} : { platform }), messages: [{ role: 'user', content: 'Ile kosztuje plan Start?' }] });
+    assert.equal(res.status, 200);
+    return log.systems[0];
+  };
+  const ios = await ask('ios');
+  assert.doesNotMatch(ios, /49 zł|99 zł|stronie tapventory\.com/);   // e-mail kontakt@tapventory.com wolno
+  assert.match(ios, /Planem firmy zarządza jej właściciel/);
+  for (const other of ['android', 'web', undefined, 'windows', 42]) {
+    const prompt = await ask(other);
+    assert.match(prompt, /49 zł netto/, `platforma ${String(other)} dostaje ceny`);
+    assert.match(prompt, /stronie tapventory\.com/);
+  }
+  // reszta instrukcji jest taka sama w obu wariantach
+  assert.equal(ios.replace(/Plany:.*\n/, ''), (await ask('android')).replace(/Plany:.*\n/, ''));
 });

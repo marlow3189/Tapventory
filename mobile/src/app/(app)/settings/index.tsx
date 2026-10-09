@@ -23,6 +23,14 @@ import { useInstallPrompt } from '@/lib/pwa';
 import { useTenant } from '@/lib/tenant';
 import { spacing } from '@/theme';
 
+// Apple (wytyczna 3.1.3) zabrania, by aplikacja w sklepie iOS zachęcała do płacenia poza App Store —
+// poza USA. Dlatego w wersji na iPhone'a NIE wspominamy o stronie z płatnościami (ani o cenach).
+// Android i przeglądarka (PWA) mogą kierować do strony. Szczegóły: docs/12_BUDOWANIE_I_PUBLIKACJA.md, rozdział o sklepach.
+const PLAN_FOOTER =
+  Platform.OS === 'ios'
+    ? 'Plan jest przypisany do firmy. Zarządza nim właściciel konta.'
+    : 'Zmianę planu i płatności obsługujemy na stronie tapventory.com (konto → plan), poza aplikacją. Ceny netto.';
+
 const FREQ: { value: TenantSettings['count_frequency']; label: string }[] = [
   { value: 'weekly', label: 'Co tydzień' },
   { value: 'biweekly', label: 'Co 2 tygodnie' },
@@ -163,7 +171,7 @@ export default function Settings() {
 
       <Section
         title="Plan i limity"
-        footer={`Zmianę planu i płatności obsługujemy na stronie tapventory.com (konto → plan), poza aplikacją. Ceny netto.`}
+        footer={PLAN_FOOTER}
       >
         <ListRow
           icon="ribbon-outline"

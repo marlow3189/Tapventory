@@ -3,7 +3,7 @@
 
 import { costMicroUsd } from '../_shared/cost.ts';
 import { HttpError, UUID_RE, bearerToken, errorResponse, json, preflight, readJsonBody } from '../_shared/http.ts';
-import { ASSISTANT_SYSTEM_PROMPT } from '../_shared/app-manual.ts';
+import { assistantSystemPrompt } from '../_shared/app-manual.ts';
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -48,13 +48,14 @@ export async function handleAssistant(req: Request, deps: AssistantDeps): Promis
     const tenantId = String(body.tenant_id ?? '');
     if (!UUID_RE.test(tenantId)) throw new HttpError(400, 'bad_request', 'Brak firmy.');
     const messages = sanitizeMessages(body.messages, deps.config.maxMessages, deps.config.maxChars);
+    const platform = body.platform === 'ios' || body.platform === 'android' || body.platform === 'web' ? body.platform : undefined;
 
     if (!(await deps.db.isMember(tenantId, userId))) throw new HttpError(403, 'forbidden', 'Brak dostępu do tej firmy.');
     await deps.db.bumpUsage(tenantId, userId, deps.config.dailyLimit);
 
     try {
       const r = await deps.chat.complete({
-        model: deps.config.model, system: ASSISTANT_SYSTEM_PROMPT, messages, signal: AbortSignal.timeout(deps.config.timeoutMs),
+        model: deps.config.model, system: assistantSystemPrompt(platform), messages, signal: AbortSignal.timeout(deps.config.timeoutMs),
       });
       await deps.db.logUsage(tenantId, userId, r.model, r.inputTokens, r.outputTokens, costMicroUsd(r.model, r.inputTokens, r.outputTokens), 'ok');
       const reply = r.text.trim();

@@ -2,7 +2,7 @@
 // Nie widzi danych firmy — tylko treść pytania. Dzienny limit pytań pilnuje serwer.
 
 import { useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { AiConsentSheet } from '@/components/AiConsentSheet';
 import { Icon, Screen, Text, TextField, Touchable, useDialogs } from '@/components/ui';
 import { invokeFunction } from '@/lib/api/functions';
@@ -45,6 +45,7 @@ export default function Assistant() {
     try {
       const res = await invokeFunction<{ reply: string }>('assistant', {
         tenant_id: tenantId,
+        platform: Platform.OS, // iOS dostaje odpowiedzi bez cen i odesłań do płatności poza App Store
         messages: next.slice(-10).map((m) => ({ role: m.role, content: m.text })),
       });
       setMessages((cur) => [...cur, { role: 'assistant', text: res.reply }]);
