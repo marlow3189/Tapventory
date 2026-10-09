@@ -70,7 +70,8 @@ mobile/                aplikacja Expo (iOS, Android, PWA): src/app (ekrany, Expo
 supabase/
   migrations/          schemat bazy + RLS + funkcje (0001…0015; po wgraniu nietykalne)
   functions/           Edge Functions: process-document, assistant, barcode-lookup, ksef-connect, ksef-sync, send-push, cron-tasks
-  tests/               117 testów bazy na prawdziwym PostgreSQL
+  tests/               testy bazy na prawdziwym PostgreSQL
+  contract/            kontrakt aplikacja ↔ baza (zapytania z aplikacji vs schemat)
   config.toml          konfiguracja lokalnego Supabase i funkcji
   seed.sql             dane przykładowe — tylko lokalnie
 eval/                  zestaw ewaluacyjny odczytu faktur (28 syntetycznych dokumentów)

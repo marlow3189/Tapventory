@@ -17,7 +17,8 @@
     "eval:test": "node --test \"eval/tests/*.test.ts\"",
     "eval:typecheck": "node mobile/node_modules/typescript/bin/tsc -p eval/tsconfig.json",
     "fn:deno-check": "npx --yes deno@2.9.6 check --no-config --node-modules-dir=none \"supabase/functions/*/index.ts\"",
-    "fn:deno-test": "npx --yes deno@2.9.6 test --no-config --node-modules-dir=none --allow-all --no-check supabase/functions/tests/"
+    "fn:deno-test": "npx --yes deno@2.9.6 test --no-config --node-modules-dir=none --allow-all --no-check supabase/functions/tests/",
+    "api:contract": "node --test \"supabase/contract/*.test.mjs\""
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "0.127.0",

@@ -19,6 +19,7 @@ Polecenia uruchamiasz w **folderze głównym** (`C:\projekty\tapventory`), chyba
 | Polecenie | Co sprawdza | Czas | Wymaga |
 |---|---|---|---|
 | `npm run db:test` | **testy bazy**: migracje 0001…0015, RLS, role, funkcje, KSeF end‑to‑end, pętla zwrotna AI (117 testów) | kilka sekund | działający PostgreSQL (rozdz. 3) |
+| `npm run api:contract` | **kontrakt aplikacja ↔ baza**: czyta kod aplikacji kompilatorem TypeScript, wyciąga każde `supabase.from(…)` i `supabase.rpc(…)` i sprawdza je z prawdziwym schematem (tabele, kolumny, uprawnienia, argumenty funkcji, klucze obce, cele `upsert`); ma własne testy z celowo błędnym kodem | ~5 s | PostgreSQL jak dla `db:test` + `npm install` w `mobile` |
 | `npm run fn:test` | **funkcje serwerowe** w Node (154 testy): potok AI, KSeF (klient, parser, synchronizacja), asystent, push, harmonogram | ~10 s | tylko Node |
 | `npm run fn:typecheck` | typy TypeScript funkcji | ~15 s | `mobile` po `npm install` |
 | `npm run fn:deno-check` | **te same funkcje pod prawdziwym Deno** (typy wszystkich siedmiu `index.ts`) | ~1 min (pierwszy raz pobiera Deno) | internet |
@@ -39,6 +40,7 @@ Liczby testów rosną z czasem — ważne, żeby było **zero niepowodzeń**.
 
 ```powershell
 npm run fn:test
+npm run api:contract        # gdy ruszałeś zapytania do bazy w aplikacji albo schemat (wymaga PostgreSQL)
 npm run fn:typecheck
 cd mobile
 npm run typecheck
@@ -71,11 +73,12 @@ node --test supabase/tests/02_security_regressions.test.mjs      # wszystkie zie
 
 ## 4. CI (GitHub Actions)
 
-Plik `.github/workflows/ci.yml`, uruchamiany przy każdym pushu i pull requeście. Pięć zadań:
+Plik `.github/workflows/ci.yml`, uruchamiany przy każdym pushu i pull requeście. Sześć zadań:
 
 | Zadanie | Co robi |
 |---|---|
 | **Baza** | usługa PostgreSQL 17 → `npm ci` → `npm run db:test` |
+| **Kontrakt** | usługa PostgreSQL 17 → `npm run api:contract` (zapytania aplikacji vs schemat bazy) |
 | **Funkcje + eval** | `fn:test`, `fn:typecheck`, `eval:test`, `eval:typecheck` |
 | **Deno** | `fn:deno-check`, `fn:deno-test` |
 | **Aplikacja** | `typecheck`, `lint`, `test`, eksport web, Android i iOS |
@@ -118,6 +121,12 @@ Funkcje mają wstrzykiwane zależności (`deps`), więc test podaje atrapy (baza
 
 Piszemy je dla czystej logiki (formaty, rachunki, walidacja NIP/EAN, statusy, KSeF). Ekrany sprawdza test dymny.
 
+### Kontrakt aplikacja ↔ baza — po co i jak czytać wynik
+
+Aplikacja i baza łączą się wyłącznie **nazwami** (tabel, kolumn, funkcji, argumentów). Literówka nie wywala kompilacji — wywala się u klienta. Dlatego `supabase/contract/` czyta kod aplikacji (AST kompilatora TypeScript, razem z typami argumentów — np. `Partial<TenantSettings>`) i porównuje go ze schematem zbudowanym z migracji.
+Wynik wypisuje liczby sprawdzonych elementów i **listę „niezweryfikowanych”** (zapytania zbudowane dynamicznie, których nie da się odczytać statycznie) — przeczytaj ją przy każdej większej zmianie. Plik `checker.test.mjs` zawiera celowo błędny kod i dowodzi, że sprawdzacz wykrywa literówki, brak uprawnień, zły cel `upsert` i brak klucza obcego.
+Czego nie sprawdza: logiki RLS (robią to testy w `supabase/tests`) ani zachowania prawdziwego PostgREST/Supabase (patrz rozdz. 7).
+
 ## 6. Test dymny interfejsu
 
 Opis, uruchomienie i ograniczenia: `docs/07_UI_I_STYL.md`, rozdz. 6. Pamiętaj: działa na **makiecie** backendu (`mock-backend.mjs`) — gdy zmieniasz zapytania do bazy w aplikacji, zaktualizuj makietę.
@@ -136,7 +145,7 @@ Opis, uruchomienie i ograniczenia: `docs/07_UI_I_STYL.md`, rozdz. 6. Pamiętaj: 
 
 ## 8. Lista kontrolna wydania
 
-- [ ] CI zielone na gałęzi wydania (wszystkie pięć zadań)
+- [ ] CI zielone na gałęzi wydania (wszystkie sześć zadań)
 - [ ] `npm run eval:run` wykonany po ostatniej zmianie polecenia/modeli, wyniki zapisane
 - [ ] migracje wgrane na projekt TEST, przebieg ręczny z `docs/00_*` (etapy 4–5) bez czerwonych komunikatów
 - [ ] sekrety funkcji ustawione (`ANTHROPIC_API_KEY`, `CRON_SECRET`, `KSEF_TOKEN_KEY`), harmonogram działa

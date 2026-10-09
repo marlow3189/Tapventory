@@ -9,6 +9,7 @@ Zasada raportu: **każde twierdzenie ma dowód albo etykietę „niesprawdzone�
 |---|---|---|
 | Baza danych — migracje `0001…0014` | skrypt `createTestDb()` buduje świeżą bazę z plików `supabase/migrations` + `seed.sql` (to samo, co `supabase db reset`) i uruchamia **117 testów** na prawdziwym PostgreSQL **16.15 i 17.5** | ✅ 117/117 na obu |
 | Bezpieczeństwo (RLS, role, uprawnienia funkcji i tabel) | testy regresji **F1–F10**, test inwariantów (lista funkcji dostępnych dla zalogowanych, macierz uprawnień do tabel, tabele „tylko backend”) | ✅ |
+| **Kontrakt aplikacja ↔ baza** (`npm run api:contract`) | kompilator TypeScript wyciąga z kodu aplikacji każde `supabase.from(…)` i `rpc(…)` i porównuje z prawdziwym schematem: nazwy tabel/kolumn/funkcji/argumentów, uprawnienia roli `authenticated`, cele `upsert`, klucze obce zagnieżdżeń; sprawdzacz ma własne testy z celowo błędnym kodem | ✅ 0 niezgodności w ~45 łańcuchach `from` i 20 wywołaniach `rpc` (1 zapytanie niezweryfikowane statycznie — sprawdzone ręcznie) |
 | Edge Functions (siedem) | **154 testy** w Node z wstrzykiwanymi atrapami; te same testy pod **Deno 2.9.6**; `deno check` wszystkich siedmiu `index.ts`; start serwera i odrzucenie żądania bez logowania (401) | ✅ |
 | KSeF | symulator serwera MF z **prawdziwym odszyfrowaniem RSA‑OAEP**; test end‑to‑end przez prawdziwy PostgreSQL | ✅ symulowany · ❌ **brak rozmowy z prawdziwym KSeF** |
 | Zestaw ewaluacyjny `eval/` | 14 testów, tryb próbny (atrapa) daje 100% przy zerowym szumie = spójność wzorca | ✅ · ❌ **brak liczb z prawdziwych modeli** |

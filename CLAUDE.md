@@ -12,6 +12,7 @@ Odczyt faktur: Claude (Haiku → Sonnet) + kontrola kodem; import faktur z KSeF 
 ```
 npm install                          # narzędzia (testy, Supabase CLI, eval); potem: cd mobile && npm install
 npm run db:test                      # testy bazy — wymagają PostgreSQL (TEST_DATABASE_URL), patrz docs/02 rozdz. 6
+npm run api:contract                 # każde supabase.from()/rpc() z aplikacji pasuje do schematu bazy (też wymaga PostgreSQL i `npm install` w mobile)
 npm run fn:test && npm run fn:typecheck          # funkcje serwerowe
 npm run fn:deno-check && npm run fn:deno-test    # te same funkcje pod prawdziwym Deno
 npm run eval:test && npm run eval:typecheck      # zestaw ewaluacyjny AI (npm run eval:run kosztuje 1–3 USD — tylko za zgodą)
@@ -59,7 +60,7 @@ Wszystko ma być **zielone** przed commitem (zestaw „przed commitem”: `docs/
 | polecenie AI (`prompt.ts`), schemat, modele, progi eskalacji | uruchom `npm run eval:run`; opisz wynik; `docs/09_AI_I_OCR.md` |
 | ceny modeli | `supabase/functions/_shared/cost.ts` (sprawdź cennik dostawcy) |
 | dane zbierane przez aplikację / nowy dostawca / SDK | `docs/prawne/`, deklaracje w sklepach (`docs/12_*`, rozdz. 5.2) |
-| zapytania do bazy w aplikacji | makieta backendu testu dymnego `mobile/scripts/ui-smoke/mock-backend.mjs` |
+| zapytania do bazy w aplikacji | `npm run api:contract` musi być zielone; makieta backendu testu dymnego `mobile/scripts/ui-smoke/mock-backend.mjs` |
 | nowa funkcja serwerowa | `supabase/config.toml` (`[functions.*]`), `supabase/functions/README.md`, `.env.example` |
 | migracja | `docs/03_*` (tabela migracji), test w `supabase/tests/` |
 
