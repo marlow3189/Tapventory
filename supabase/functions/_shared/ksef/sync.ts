@@ -69,7 +69,10 @@ export const DEFAULT_SYNC_LIMITS: SyncLimits = {
   pageSize: 100,
   maxInvoicesPerRun: 300,
   timeBudgetMs: 100_000,
-  downloadGapMs: 120,
+  // Oficjalny limit KSeF (produkcja): pobranie faktury po numerze to 8/s, 16/min i 64/h na parę NIP + adres IP.
+  // 4 s odstępu = 15 pobrań na minutę — nie dotykamy limitu minutowego (każde 429 jest rejestrowane przez MF).
+  // Limit godzinowy (64) zostaje: większa zaległość schodzi w kilka godzin (patrz docs/10_KSEF.md).
+  downloadGapMs: 4000,
   windowDays: 90,
   defaultLookbackDays: 30,
 };

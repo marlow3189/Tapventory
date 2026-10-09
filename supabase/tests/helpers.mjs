@@ -62,37 +62,37 @@ export async function createTestDb({ upTo, seed = true } = {}) {
   const db = new pg.Client({ connectionString: url.toString() });
   await db.connect();
 
-  await db.query(readFileSync(path.join(here, 'bootstrap.sql'), 'utf8'));
+  const drop = async () => {
+    await db.end().catch(() => {});
+    const c = new pg.Client({ connectionString: ADMIN_URL });
+    await c.connect();
+    await c.query(`drop database if exists ${name} with (force)`);
+    await c.end();
+  };
 
   const applied = [];
-  for (const m of listMigrations()) {
-    if (upTo && m.name.slice(0, 4) > upTo) break;
-    try {
-      await db.query(m.sql);
-    } catch (e) {
-      e.message = `Migracja ${m.name} nie przeszla: ${e.message}`;
-      throw e;
+  try {
+    await db.query(readFileSync(path.join(here, 'bootstrap.sql'), 'utf8'));
+    for (const m of listMigrations()) {
+      if (upTo && m.name.slice(0, 4) > upTo) break;
+      try {
+        await db.query(m.sql);
+      } catch (e) {
+        e.message = `Migracja ${m.name} nie przeszla: ${e.message}`;
+        throw e;
+      }
+      applied.push(m.name);
     }
-    applied.push(m.name);
-  }
-  if (seed) {
-    await db.query(readFileSync(path.join(supabaseDir, 'seed.sql'), 'utf8'));
+    if (seed) {
+      await db.query(readFileSync(path.join(supabaseDir, 'seed.sql'), 'utf8'));
+    }
+  } catch (e) {
+    // Bez tego nieudana migracja zostawialaby otwarte polaczenie (test "wisi") i smieciowa baze tv_test_*.
+    await drop().catch(() => {});
+    throw e;
   }
 
-  const ctx = {
-    name,
-    url: url.toString(),
-    admin: db,
-    applied,
-    async drop() {
-      await db.end();
-      const c = new pg.Client({ connectionString: ADMIN_URL });
-      await c.connect();
-      await c.query(`drop database if exists ${name} with (force)`);
-      await c.end();
-    },
-  };
-  return ctx;
+  return { name, url: url.toString(), admin: db, applied, drop };
 }
 
 // ----------------------------------------------------------------------------
