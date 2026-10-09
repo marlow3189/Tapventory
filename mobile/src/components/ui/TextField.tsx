@@ -40,7 +40,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           {...rest}
           multiline={multiline}
           secureTextEntry={secret && !shown}
-          placeholderTextColor={c.textTertiary}
+          placeholderTextColor={c.textSecondary}
           accessibilityLabel={rest.accessibilityLabel ?? label}
           onFocus={(e) => {
             setFocused(true);

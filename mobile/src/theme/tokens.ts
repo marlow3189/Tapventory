@@ -26,7 +26,9 @@ export const lightPalette: Palette = {
   border: '#DBDBDB', borderLight: '#EFEFEF', fill: '#EFEFEF',
   text: '#262626', textSecondary: '#737373', textTertiary: '#A8A8A8', textOnPrimary: '#FFFFFF',
   primary: '#0095F6', link: '#00376B',
-  danger: '#ED4956', success: '#2EA44F', warning: '#F59E0B', info: '#0095F6', violet: '#8B5CF6',
+  // Kolory semantyczne w jasnym motywie przyciemnione tak, by tekst i biały napis na nich miały kontrast ≥ 4,5:1 (WCAG AA):
+  // danger #ED4956 (3,7:1) → #D32F3C, success #2EA44F (3,2:1) → #1A7F37, warning #F59E0B (2,2:1) → #B45309, violet #8B5CF6 (4,2:1) → #7C3AED.
+  danger: '#D32F3C', success: '#1A7F37', warning: '#B45309', info: '#0095F6', violet: '#7C3AED',
   overlay: 'rgba(0,0,0,0.55)', skeleton: '#EFEFEF', isDark: false,
 };
 
@@ -70,11 +72,16 @@ export const layout = {
 
 export type Tone = 'neutral' | 'info' | 'violet' | 'warning' | 'success' | 'danger';
 
+/** Kolor tekstu kapsułek w jasnym motywie: ciemniejszy niż kolor „graficzny", żeby napis na jasnym tle miał kontrast ≥ 4,5:1. */
+const LIGHT_PILL_TEXT: Record<Tone, string> = {
+  neutral: '#666666', info: '#0069B8', violet: '#7C3AED', warning: '#9A4A07', success: '#177A33', danger: '#C0222F',
+};
+
 export function toneColors(p: Palette, tone: Tone): { fg: string; bg: string } {
   const map: Record<Tone, string> = {
     neutral: p.textSecondary, info: p.info, violet: p.violet,
     warning: p.warning, success: p.success, danger: p.danger,
   };
-  const fg = map[tone];
-  return { fg, bg: p.isDark ? `${fg}33` : `${fg}1F` };
+  const base = map[tone];                       // tło kapsułki wyliczamy z koloru podstawowego
+  return { fg: p.isDark ? base : LIGHT_PILL_TEXT[tone], bg: p.isDark ? `${base}33` : `${base}1F` };
 }

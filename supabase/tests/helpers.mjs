@@ -43,7 +43,9 @@ export function listMigrations() {
  *            przydatne do pokazania, jak zachowywala sie baza przed poprawkami;
  *   seed   - czy nakleic seed.sql (domyslnie tak).
  */
-export async function createTestDb({ upTo, seed = true } = {}) {
+export async function createTestDb({ upTo = process.env.TEST_MIGRATE_UP_TO, seed = true } = {}) {
+  // TEST_MIGRATE_UP_TO=0002 zatrzymuje budowe bazy na wskazanej migracji - tak pokazujemy, ze testy F1-F10 swieca na czerwono
+  // na oryginalnym fundamencie (0001+0002), a na zielono dopiero po 0003 (docs/05_RAPORT_WERYFIKACJI.md).
   const name = `tv_test_${randomBytes(4).toString('hex')}`;
 
   const adminConn = new pg.Client({ connectionString: ADMIN_URL });
