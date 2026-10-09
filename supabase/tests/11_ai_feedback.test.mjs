@@ -133,3 +133,18 @@ test('uprawnienia: raport i zapis odczytu tylko dla backendu — zalogowani i an
   const ok = await asService(db).query(`select public.ai_correction_report() as r`);
   assert.equal(typeof ok.rows[0].r.documents, 'number');
 });
+
+test('dziennik zdarzeń nie kopiuje migawki odczytu (0015): wpisy o dokumencie nie mają klucza ai_extraction', async () => {
+  const T = await ownerWithTenant(db, 'FB5');
+  await insertProduct(db, T.tenantId, 'Rękawice nitrylowe L', { unit: 'op.' });
+  const d = await newDoc(T);
+  await apply(d, extraction({ invoice_number: 'FV/FB5' }));
+  await T.session.query(`update public.documents set notes = 'sprawdzone' where id = $1`, [d]);
+
+  const rows = (await db.admin.query(`select data from public.audit_log where table_name = 'documents' and row_id = $1`, [d])).rows;
+  assert.ok(rows.length >= 2, 'wpisy o dokumencie istnieją (dodanie, odczyt, edycja)');
+  assert.ok(rows.every((r) => !('ai_extraction' in r.data)), 'migawka nie trafia do dziennika');
+  assert.ok(rows.every((r) => 'invoice_number' in r.data || r.data.invoice_number === undefined), 'reszta pól zostaje');
+  // a sama migawka w dokumencie jest nienaruszona
+  assert.ok((await db.admin.query(`select ai_extraction from public.documents where id = $1`, [d])).rows[0].ai_extraction.lines.length > 0);
+});

@@ -141,7 +141,7 @@ npx supabase db push
 
 * `login` otwiera przeglądarkę → **Authorize**.
 * `link` pyta o **Database Password** z kroku 3A.2.
-* `db push` pokazuje listę migracji do wykonania (`0001_init.sql` … `0014_ai_feedback_snapshot.sql`) → wpisz `Y`. Prawidłowy koniec: brak słowa `ERROR`.
+* `db push` pokazuje listę migracji do wykonania (`0001_init.sql` … `0015_audit_without_snapshot.sql`) → wpisz `Y`. Prawidłowy koniec: brak słowa `ERROR`.
   To polecenie **tworzy całą bazę**: tabele, reguły dostępu, funkcje, magazyn plików na zdjęcia i faktury. Jeśli migracja zgłosi błąd — skopiuj **cały** komunikat i zgłoś; plików już wgranych nie poprawiamy, dodajemy nowe.
 
 ### 3C. Ustawienia logowania (Authentication)

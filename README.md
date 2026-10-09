@@ -68,7 +68,7 @@ Pełny raport: [`docs/05_RAPORT_WERYFIKACJI.md`](docs/05_RAPORT_WERYFIKACJI.md) 
 ```
 mobile/                aplikacja Expo (iOS, Android, PWA): src/app (ekrany, Expo Router), src/components, src/lib, src/theme, public (PWA)
 supabase/
-  migrations/          schemat bazy + RLS + funkcje (0001…0014; po wgraniu nietykalne)
+  migrations/          schemat bazy + RLS + funkcje (0001…0015; po wgraniu nietykalne)
   functions/           Edge Functions: process-document, assistant, barcode-lookup, ksef-connect, ksef-sync, send-push, cron-tasks
   tests/               117 testów bazy na prawdziwym PostgreSQL
   config.toml          konfiguracja lokalnego Supabase i funkcji

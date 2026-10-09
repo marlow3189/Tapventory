@@ -18,7 +18,7 @@ Polecenia uruchamiasz w **folderze głównym** (`C:\projekty\tapventory`), chyba
 
 | Polecenie | Co sprawdza | Czas | Wymaga |
 |---|---|---|---|
-| `npm run db:test` | **testy bazy**: migracje 0001…0014, RLS, role, funkcje, KSeF end‑to‑end, pętla zwrotna AI (117 testów) | kilka sekund | działający PostgreSQL (rozdz. 3) |
+| `npm run db:test` | **testy bazy**: migracje 0001…0015, RLS, role, funkcje, KSeF end‑to‑end, pętla zwrotna AI (117 testów) | kilka sekund | działający PostgreSQL (rozdz. 3) |
 | `npm run fn:test` | **funkcje serwerowe** w Node (154 testy): potok AI, KSeF (klient, parser, synchronizacja), asystent, push, harmonogram | ~10 s | tylko Node |
 | `npm run fn:typecheck` | typy TypeScript funkcji | ~15 s | `mobile` po `npm install` |
 | `npm run fn:deno-check` | **te same funkcje pod prawdziwym Deno** (typy wszystkich siedmiu `index.ts`) | ~1 min (pierwszy raz pobiera Deno) | internet |

@@ -51,6 +51,7 @@ Kluczowe decyzje:
 | `0012_pg17_maintain_privilege` | PostgreSQL 17 odbiera nowe uprawnienie `MAINTAIN` rolom aplikacji |
 | `0013_ksef_honor_retry_after` | przerwa po 429 nie krótsza niż `Retry-After` |
 | `0014_ai_feedback_snapshot` | migawka odczytu maszynowego i `ai_correction_report` |
+| `0015_audit_without_snapshot` | dziennik zdarzeń nie kopiuje migawki (inaczej puchłby przy każdej edycji dokumentu) |
 
 ## 3. Role i uprawnienia
 

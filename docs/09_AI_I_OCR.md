@@ -40,7 +40,7 @@ wołany co minutę przez `cron-tasks`).
 
 Gdzie co leży: `mobile/src/app/(app)/documents/scan.tsx` (ekran skanowania), `mobile/src/lib/images.ts` (kompresja), `supabase/functions/process-document/handler.ts` (przepływ),
 `_shared/pipeline.ts` (tani → kontrola → mocny), `_shared/providers/anthropic.ts` (wywołanie API), `_shared/invoice.ts` (normalizacja i kontrola), `_shared/prompt.ts` (polecenia dla modelu),
-`supabase/migrations/0006…0010, 0014` (baza).
+`supabase/migrations/0006…0010, 0014, 0015` (baza).
 
 ## 2. Kontrola kodem: co dokładnie sprawdzamy
 

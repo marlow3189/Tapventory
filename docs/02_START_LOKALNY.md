@@ -48,7 +48,7 @@ Ustawienia logowania (Site URL, Redirect URLs, „Confirm email”) w chmurze zm
    npx supabase db reset
    ```
 
-   Prawidłowy przebieg wymienia kolejno migracje `0001_init.sql` … `0014_ai_feedback_snapshot.sql`, potem `Seeding data from supabase/seed.sql…` i `Finished supabase db reset` — bez słowa `ERROR`.
+   Prawidłowy przebieg wymienia kolejno migracje `0001_init.sql` … `0015_audit_without_snapshot.sql`, potem `Seeding data from supabase/seed.sql…` i `Finished supabase db reset` — bez słowa `ERROR`.
 4. Obejrzyj bazę: **http://127.0.0.1:54323** (Studio) → **Table Editor**.
 5. W `mobile\.env` ustaw adres i klucz lokalne (rozdz. 5), uruchom `npm run web`, przejdź ścieżkę z etapu 4 instrukcji.
 6. Zatrzymanie: `npx supabase stop`. „Port is already allocated” → poprzednia sesja nie zeszła: `npx supabase stop`, odczekaj chwilę, `npx supabase start`.
