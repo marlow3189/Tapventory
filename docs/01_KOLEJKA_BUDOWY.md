@@ -9,7 +9,7 @@ Legenda: ✅ zrobione i przetestowane automatycznie · ◐ częściowo · ❌ ni
 
 - [x] **Krok 1 — Fundament:** schemat bazy + RLS, logowanie, rejestracja, firma, pulpit. Poprawione luki bezpieczeństwa F1–F10 (`0003`).
 - [x] **Krok 2 — Zespół:** ekran zespołu, zaproszenia kodem (`ABCD-EFGH`), role, flagi uprawnień, wiele firm na koncie.
-- [x] **Krok 3 — Produkty i magazyn:** katalog, siatka, skaner EAN (natywny i w przeglądarce), „Zdejmij” w 2 dotknięcia, historia ruchów, minima, korekty, mini‑spisy.
+- [x] **Krok 3 — Produkty i magazyn:** katalog, siatka, skaner EAN (natywny i w przeglądarce), „Zdejmij” w 2 dotknięcia, historia ruchów, minima, korekty, mini‑spisy, **eksport CSV** (stany, ruchy, faktury — otwiera się w polskim Excelu).
 - [x] **Krok 4 — Zgłoszenia braków + czat:** feed w stylu Instagrama, statusy z historią, serce „ja też tego potrzebuję”, komentarze na żywo (Realtime), powiadomienia.
 - [x] **Krok 5 — Dokumenty foto + AI:** skan do 10 stron/PDF, odczyt Claude z kontrolą kodem, ekran weryfikacji, dopasowanie produktów i aliasy, księgowanie, storno, limity planów, zgoda na AI, asystent „jak to zrobić”.
 - [x] **Krok 6 — KSeF:** klient API 2.0, parser FA(2)/FA(3), sejf na token, synchronizacja z limitami MF, ekran połączenia. ⏳ **Weryfikacja na żywo** (`docs/10_KSEF.md`, rozdz. 7).
@@ -44,7 +44,7 @@ Szacunki czasu to **moje zgadywanie** dla jednej osoby z pomocą AI; traktuj jak
 | 10 | **2FA:** TOTP (MFA Supabase) + kody zapasowe; SMS przy nowym urządzeniu; alert e‑mail; zdalne wylogowanie | ok. tygodnia |
 | 11 | Budowa natywna, TestFlight i testy wewnętrzne Google Play, test na urządzeniach; push (APNs automatycznie, Android: Firebase) | 2–3 dni + czekanie na konta |
 | 12 | **Web Push** dla PWA (projekt w `docs/13_*`, rozdz. 5.2) | 1–2 dni |
-| 13 | Eksport CSV (stany, ruchy, faktury), ekran dziennika zdarzeń, raport „koszt materiałów na zlecenie” | 3–5 dni |
+| 13 | Ekran dziennika zdarzeń, raport „koszt materiałów na zlecenie” (eksport CSV stanów, ruchów i faktur jest już zrobiony) | 2–4 dni |
 | 14 | Eksport danych użytkownika (RODO) | ok. 2 dni |
 | 15 | Rozstrzygnięcie ryzyka Apple 3.1.3(c): rozmowa o modelu płatności / plan B z zakupami w aplikacji | zależnie od recenzji |
 

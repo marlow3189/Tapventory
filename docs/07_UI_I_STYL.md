@@ -27,6 +27,7 @@ Dlaczego takie podejście ma sens biznesowy: pracownik warsztatu czy salonu zna 
 | Profil, zespół, zaproszenia | `(app)/(tabs)/profile.tsx`, `(app)/team/*` | wszyscy / kierownictwo | |
 | Ustawienia (plan, mini‑spisy, zlecenia, zgoda AI, usuwanie konta) | `(app)/settings/index.tsx` | wszyscy / kierownictwo | |
 | KSeF (kreator tokenu, stan, historia) | `(app)/settings/ksef.tsx` | kierownictwo / właściciel łączy | ![KSeF](img/ksef-kreator.png) |
+| Eksport danych do CSV (stany, ruchy, faktury) | `(app)/settings/export.tsx`, `lib/csv.ts` | kierownictwo | |
 | Asystent AI | `(app)/assistant.tsx` | wszyscy | |
 | Logowanie, rejestracja, reset hasła, wybór „firma / kod”, tworzenie firmy, dołączanie kodem | `(auth)/*`, `(onboarding)/*`, `create-company.tsx`, `join.tsx` | niezalogowani / nowi | |
 
@@ -109,7 +110,6 @@ Ograniczenie: to nie zastępuje testu na prawdziwym telefonie ani testu z prawdz
 ## 7. Co jeszcze warto w interfejsie (lista pomysłów)
 
 * ekran „Dziennik zdarzeń” (dane są w `audit_log`, brak widoku),
-* eksport CSV (stany, ruchy, faktury) — w koncepcji, niezrobione,
 * raport „koszt materiałów na zlecenie” (dane są: ruchy i pozycje mają `project_id`),
 * druk etykiet z kodami (konkurencja, np. Sortly, ma),
 * ciągły skan wielu kodów pod rząd,

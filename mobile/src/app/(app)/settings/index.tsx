@@ -169,6 +169,12 @@ export default function Settings() {
         </Section>
       ) : null}
 
+      {isManager ? (
+        <Section title="Dane" footer="Stany, ruchy i faktury do arkusza kalkulacyjnego — np. dla księgowej.">
+          <ListRow icon="download-outline" title="Eksport do CSV (Excel)" onPress={() => router.push('/settings/export')} last />
+        </Section>
+      ) : null}
+
       <Section
         title="Plan i limity"
         footer={PLAN_FOOTER}

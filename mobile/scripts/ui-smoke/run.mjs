@@ -244,6 +244,30 @@ async function step(title, fn) {
     await page.getByText('Podłącz raz, a faktury wpadają same').waitFor();
     await snap(page, 'settings-ksef-row');
   });
+  await step('ustawienia: wiersz „Eksport do CSV”', async () => {
+    await visit(page, '/settings', 'Eksport do CSV (Excel)');
+    await snap(page, 'settings-export-row');
+  });
+  await step('eksport CSV: stany i faktury pobierają plik z BOM, nagłówkiem i danymi', async () => {
+    await visit(page, '/settings/export', 'Stany magazynowe');
+    const download = async (title) => {
+      const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), page.getByText(title, { exact: true }).click()]);
+      const file = await dl.path();
+      return { name: dl.suggestedFilename(), bytes: readFileSync(file) };
+    };
+    const stany = await download('Stany magazynowe');
+    if (!/^tapventory-stany-\d{4}-\d{2}-\d{2}\.csv$/.test(stany.name)) throw new Error(`zła nazwa pliku stanów: ${stany.name}`);
+    if (!(stany.bytes[0] === 0xef && stany.bytes[1] === 0xbb && stany.bytes[2] === 0xbf)) throw new Error('plik stanów nie zaczyna się od BOM UTF-8');
+    const stanyText = stany.bytes.toString('utf8');
+    if (!stanyText.includes('Nazwa;EAN;Jednostka;Stan;Minimum;Poniżej minimum')) throw new Error('brak nagłówka w pliku stanów');
+    if (!stanyText.includes('Rękawice nitrylowe L')) throw new Error('brak produktu w pliku stanów');
+    await page.getByText('Gotowe:', { exact: false }).first().waitFor({ timeout: 5000 });
+    await snap(page, 'export-done');
+    const faktury = await download('Faktury');
+    const fakturyText = faktury.bytes.toString('utf8');
+    if (!fakturyText.includes('Data wystawienia;Dostawca;NIP dostawcy') || !fakturyText.includes('Hurtownia ABC')) throw new Error('plik faktur bez nagłówka lub danych');
+    if (!/\r\n/.test(fakturyText)) throw new Error('plik faktur nie używa końców linii CRLF');
+  });
   await step('KSeF: kreator (niepodłączony) — walidacja tokenu i połączenie', async () => {
     await visit(page, '/settings/ksef', 'Jak podłączyć');
     await page.getByText('Zaznacz TYLKO „Przeglądanie faktur”').waitFor();
@@ -314,6 +338,10 @@ async function step(title, fn) {
   await step('pracownik: ekran KSeF przekierowuje na start', async () => {
     await visit(page, '/settings/ksef', 'Rękawice nitrylowe L');
     if (page.url().includes('/settings/ksef')) throw new Error('pracownik nie powinien widzieć ekranu KSeF');
+  });
+  await step('pracownik: eksport danych przekierowuje na start', async () => {
+    await visit(page, '/settings/export', 'Rękawice nitrylowe L');
+    if (page.url().includes('/settings/export')) throw new Error('pracownik nie powinien widzieć ekranu eksportu');
   });
   await context.close();
 }

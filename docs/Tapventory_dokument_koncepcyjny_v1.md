@@ -288,7 +288,8 @@ Legenda: ✅ zbudowane i przetestowane · ◐ częściowo · ❌ nie zrobione. �
 | 4. Katalog, EAN, „Zdejmij”, progi, push | ✅/◐ | push natywny: kod jest, Android wymaga Firebase; Web Push ❌ |
 | 4. Zgłoszenia ze statusami i czatem (Realtime) | ✅ | + „ja też tego potrzebuję” |
 | 4. Projekty/zlecenia | ◐ | encje i przypisywanie są; raport „koszt materiałów na zlecenie” ❌ |
-| 4. Eksport CSV, ekran dziennika zdarzeń | ❌ | `audit_log` zapisuje, brak widoku |
+| 4. Eksport CSV | ✅ | stany, ruchy (90 dni), faktury; Excel po polsku (separator „;”, przecinek, BOM); natywnie przez „Udostępnij” — **niesprawdzone na telefonie** |
+| 4. Ekran dziennika zdarzeń | ❌ | `audit_log` zapisuje, brak widoku |
 | 4. RODO: eksport danych | ❌ | usunięcie konta/firmy ✅ |
 | 4. Asystent AI (pomocowy) | ✅ | pytania o dane firmy (1.5) ❌ |
 | 5. Model danych, RLS | ✅ | 14 migracji |
