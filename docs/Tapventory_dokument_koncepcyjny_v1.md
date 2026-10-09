@@ -1,6 +1,7 @@
-# Tapventory — dokument koncepcyjny v1.1
+# Tapventory — dokument koncepcyjny v1.2
 
-Data: 18.08.2026 · Status: zaakceptowany kierunek, przed rozpoczęciem budowy
+Data: 9.10.2026 (v1.1: 18.08.2026) · Status: kierunek zaakceptowany, **budowa Etapu 1 w większości zrealizowana** — patrz rozdz. 19 „Stan realizacji”
+**Zmiany v1.2 (po weryfikacji i badaniu rynku, `docs/04_RYNEK_I_TECHNOLOGIE.md`, `docs/05_RAPORT_WERYFIKACJI.md`):** skorygowana teza rynkowa (rozdz. 1–2: KSeF→magazyn mają już pakiety księgowe), poprawiony opis terminów KSeF (rozdz. 8.1), tokeny KSeF szyfrowane w aplikacji (AES‑256‑GCM) zamiast Vault, decyzja TS vs mikroserwis rozstrzygnięta (REST z TypeScript), odczyt faktur modelem Claude z kontrolą kodem zamiast „Gemini Flash” (rozdz. 9–10), ostrzeżenie Apple 3.1.3(c) o sprzedaży jednoosobowej (rozdz. 11), nowe ryzyka (rozdz. 17), stan realizacji (rozdz. 19).
 Zmiany v1.1: atrybucja ruchów do kont (nie urządzeń), konfigurowalne mini-spisy z pytaniem przy "Zdejmij", flaga billing (np. dla księgowej), procedura administracyjna zmiany właściciela, edycja i storno przy skanach, asystent AI, ochrona darmowych okresów przed nadużyciami
 Zakres: Etap 1 (aplikacja magazynowo-zakupowa) + założenia Etapu 2 (marketplace B2B) + zaparkowany side project (rolnik)
 
@@ -14,7 +15,7 @@ Zakres: Etap 1 (aplikacja magazynowo-zakupowa) + założenia Etapu 2 (marketplac
 
 **Trzy filary produktu:** prostota (działa w 10 minut od instalacji, zero wdrożeniowca), bezpieczeństwo (izolacja danych firm na poziomie bazy, 2FA, audyt), automatyzacja przyjęć (KSeF + AI).
 
-**Klin rynkowy:** nikt na rynku nie łączy: (1) zgłaszania braków zdjęciem przez pracownika, (2) automatycznego wciągania polskich faktur zakupowych z KSeF, (3) mobile-first po polsku w cenie dla mikrofirmy. Zagraniczni gracze (Sortly, BoxHero) nie wejdą w KSeF; polscy (Subiekt, WAPRO, Comarch) to desktopowe systemy księgowo-magazynowe wymagające wdrożenia.
+**Klin rynkowy (v1.2 — skorygowany):** *„nikt na rynku nie łączy”* (v1.1) było zbyt mocne. **Przyjęcie magazynowe z faktury z KSeF oferuje już część polskich pakietów księgowych** (Symfonia, Firmino, wFirma, iFirma, Comarch z OCR — patrz `docs/04_*`, rozdz. 2). Naszą przewagą jest zatem połączenie: (1) **wyjścia towaru z hali** — „Zdejmij” w 2 dotknięcia, skan EAN, zgłaszanie braków zdjęciem z czatem i mini‑spisy, czego pakiety księgowe nie robią mobilnie; (2) **neutralności** — Tapventory czyta KSeF własnym tokenem tylko do odczytu i nie wymaga zmiany programu do faktur ani księgowości; (3) **ceny i prostoty dla ≤ 10 osób**, KSeF bez limitu dokumentów; (4) foto‑faktur z kontrolą kodem dla tego, czego KSeF jeszcze nie obejmuje. Zagraniczni gracze (Sortly, BoxHero) nie mają KSeF ani polskiego obiegu faktur; polskie programy desktopowe (Subiekt nexo, WAPRO, Comarch Optima) wymagają wdrożenia.
 
 ---
 
@@ -27,7 +28,7 @@ Zakres: Etap 1 (aplikacja magazynowo-zakupowa) + założenia Etapu 2 (marketplac
 | Zoho/Odoo | od ~59 USD | — (kontrprzykład) | złożoność wymagająca wdrożenia |
 | Subiekt/WAPRO/Comarch | licencje + wdrożenie | — | desktop, ciężar księgowy |
 
-Pozycjonowanie: 2–4× taniej niż Sortly, po polsku, z KSeF, na telefonie.
+Pozycjonowanie (v1.2): **„magazyn dla ludzi z hali, nie dla księgowej”** — po polsku, z KSeF, na telefonie. Uwaga do cen: „2–4× taniej niż Sortly” dotyczy cen katalogowych; przy promocyjnych 24 USD/mc (Advanced, płatność roczna) różnica to ok. 2×. Polskie pakiety fakturowo‑magazynowe bywają tańsze (np. Subiekt 123: 19,90 + 18,90 zł/mc, Firmino od 14,50 zł), ale sprzedają fakturowanie, a nie wyjście towaru. Ceny konkurencji: `docs/04_*` (znaczniki wiarygodności).
 
 ---
 
@@ -112,7 +113,7 @@ Zasady: każde ID to **UUID v7 generowane na kliencie** (warunek przyszłego off
 - **Alerty:** mail przy logowaniu z nowego urządzenia i zmianie hasła/numeru, z przyciskiem "to nie ja — zablokuj".
 - **Dane:** RLS na każdej tabeli; rola + tenant_id w tokenie **ustawiane wyłącznie serwerowo**; Storage prywatny, ścieżki `tenant_id/…`, dostęp przez podpisane wygasające linki.
 - **Higiena:** rate limiting na kody, captcha przy rejestracji, zdalne wylogowanie urządzeń, natychmiastowe odcięcie po usunięciu membership, backupy dzienne + PITR (odtwarzanie do sekundy), region **UE-Frankfurt** + umowa powierzenia (DPA) — RODO.
-- **Tokeny KSeF klientów:** szyfrowane w spoczynku, dostęp tylko z funkcji serwerowych, każde użycie w audit_log.
+- **Tokeny KSeF klientów:** szyfrowane w spoczynku **AES‑256‑GCM kluczem poza bazą** (sekret funkcji `KSEF_TOKEN_KEY`, AAD = firma; rotacja kluczem „nowy,stary”), dostęp tylko z funkcji serwerowych; historia pobrań w `ksef_sync_runs` (każde użycie tokenu w pełnym `audit_log` — jeszcze nie zrobione). *(v1.1 zakładało Supabase Vault — zrezygnowano, bo szyfrowanie w aplikacji daje rotację kluczy i niezależność od wersji platformy.)*
 - **Ochrona darmowych okresów przed nadużyciami:** tożsamość firmy kotwiczymy w sygnałach twardych — NIP (trial 1× na NIP), odcisk karty płatniczej (fingerprint Stripe), zweryfikowany e-mail/telefon; metadane urządzenia to tylko sygnał pomocniczy. Wymiana telefonu niczego nie resetuje: "zaufane urządzenie" wyłącznie pomija SMS przy logowaniu — nie daje żadnych dni gratis; nagroda z polecenia wyłącznie po opłaconej fakturze.
 
 ---
@@ -121,16 +122,16 @@ Zasady: każde ID to **UUID v7 generowane na kliencie** (warunek przyszłego off
 
 ### 8.1 KSeF (Polska) — kanał główny przyjęć
 
-Kontekst prawny: od 1.02.2026 każdy podatnik odbiera faktury w KSeF; od 1.04.2026 MŚP i JDG wystawiają obowiązkowo; najmniejsi (≤450 zł/faktura i ≤10 tys. zł/mc) od 1.01.2027; sankcje od 1.01.2027.
+Kontekst prawny (wg strony MF `ksef.podatki.gov.pl/etapy-wdrozenia-ksef/` i źródeł wtórnych — **potwierdź na gov.pl/ksef i u doradcy podatkowego**): od 1.02.2026 obowiązek wystawiania dla największych podatników (sprzedaż > 200 mln zł w 2024 r.) i **odbiór faktur przez KSeF przez wszystkich**; od 1.04.2026 obowiązek wystawiania dla pozostałych; od **1.01.2027 dla najmniejszych** (sprzedaż udokumentowana fakturami do **10 000 zł brutto miesięcznie**); **sankcje finansowe od 1.01.2027**, w 2026 r. bez kar. *(Sformułowanie v1.1 „≤450 zł/faktura i ≤10 tys. zł/mc” było mylące: 450 zł dotyczy faktur uproszczonych/paragonów z NIP, niewliczanych do limitu 10 tys. zł.)*
 
 **Mechanika integracji (API KSeF 2.0):**
 - Środowiska: TEST → DEMO (przedprodukcja) → PROD. Dokumentacja OpenAPI + SDK (Java/.NET) + przykłady: GitHub CIRFMF.
 - Uwierzytelnienie: podpis XAdES (kwalifikowany/pieczęć/certyfikat KSeF) **lub token KSeF** → accessToken (JWT, kilkanaście minut) + refreshToken (do 7 dni).
 - **Onboarding klienta — ścieżka A (MVP):** właściciel generuje w Aplikacji Podatnika token KSeF z uprawnieniem TYLKO "przeglądanie faktur" i wkleja go do Tapventory (kreator z instrukcją krok po kroku). Token bez daty ważności, odwoływalny natychmiast. Tapventory technicznie nie może niczego wystawić — argument bezpieczeństwa i sprzedażowy.
 - **Ścieżka B (później):** klient nadaje uprawnienia podmiotowi (NIP Tapventory) jak biuru rachunkowemu; my uwierzytelniamy się własnym certyfikatem w kontekście klienta. Wymaga pieczęci kwalifikowanej po naszej stronie.
-- Pobieranie: proces w tle co 15–30 min pyta o nowe faktury zakupowe → XML FA(3) → parser → `documents` + `document_lines` (status szkic) → ekran weryfikacji → księgowanie.
-- Szczegóły techniczne: obowiązkowe szyfrowanie AES-256-CBC + RSAES-OAEP (klucz publiczny KSeF); limit 1 MB (3 MB z załącznikami); system sam pilnuje duplikatów po NIP+numer przez 10 lat.
-- **Punkt decyzyjny:** SDK MF są w Java/.NET, nasze funkcje w TypeScript. Opcja (a) REST bezpośrednio z TS (preferowana; API to REST, krypto standardowe), opcja (b) mikroserwis .NET tylko do KSeF. Decyzja po tygodniu prototypu na TEST. Budżet czasu: **3 tygodnie**.
+- Pobieranie (**zrealizowane**): harmonogram co minutę wybiera firmy, którym należy się synchronizacja (automat co **≥ 3 h**, ręcznie „Synchronizuj teraz” ≥ 2 min), lista faktur zakupu po dacie trwałego zapisu → XML FA(2)/FA(3) → parser → `documents` + `document_lines` (szkic) → ekran weryfikacji → księgowanie. **Limity MF (produkcja, na parę NIP + IP): lista faktur 20/h, pobranie faktury 64/h, 16/min** — pierwszy import dużej zaległości trwa godziny (`docs/10_KSEF.md`). MF zaleca odstęp ≥ 15 min na podmiot.
+- Szczegóły techniczne: do **uwierzytelnienia tokenem** token (ze znacznikiem czasu) szyfruje się RSA‑OAEP SHA‑256 kluczem publicznym MF; AES‑256‑CBC dotyczy **wysyłki** faktur (której nie robimy); limit rozmiaru faktury 1 MB (3 MB z załącznikami); system pilnuje duplikatów po NIP+numer; po naszej stronie dedup po numerze KSeF.
+- **Decyzja (v1.2):** wybrano opcję (a) — **REST bezpośrednio z TypeScript** (klient, parser FA, sejf w `supabase/functions/_shared/ksef/`); mikroserwis .NET niepotrzebny. Zostaje **weryfikacja na żywym KSeF** (`docs/10_KSEF.md`, rozdz. 7), której nie mogłem wykonać.
 
 ### 8.2 Architektura na całą UE
 
@@ -158,7 +159,7 @@ Decyzje: parser EN 16931 (UBL+CII) pokrywa DE/BE/FR jednym kodem; FA(3) osobno. 
 6. Push "faktura gotowa do sprawdzenia" → **ekran weryfikacji**: dopasowanie pozycji (EAN → historia nazw → podobieństwo), zielone/żółte, nic nie księguje się automatycznie → "Zatwierdź" → ruchy typu przyjęcie.
 7. **Edycja i korekty pomyłek.** Przed zaksięgowaniem (szkic): każde pole edytowalne (dostawca, numer, data; pozycje: nazwa/ilość/cena/jednostka/dopasowany produkt), dodawanie i usuwanie pozycji, powtórne zdjęcie strony, rozdzielanie/scalanie źle zgrupowanych stron. Po zaksięgowaniu: **zasada "nie gumkujemy — stornujemy"** — "Cofnij księgowanie" tworzy ruchy odwrotne (storno) i przywraca dokument do szkicu do poprawy; pojedynczą pozycję można skorygować punktowym ruchem korekty bez cofania całości; wszystko w audit_log. Każda ręczna poprawka dopasowania zapisuje się w słowniku aliasów ("Lakier hybr. czerw. 15ml" → Lakier OPI Red 15 ml) — system uczy się i następnym razem trafia sam.
 
-Koszt: Gemini 2.5 Flash 0,15/1,25 USD za mln tokenów (wej./wyj.) → strona faktury < 1 gr; wielostronicowe — pojedyncze grosze.
+Koszt i model (v1.2): odczyt wykonuje **Claude Haiku 5.5** (0,10/0,50 USD za mln tokenów wej./wyj.), a **Claude Sonnet 5.5** (2/10 USD) dopiero, gdy kod wykryje błąd; wynik zawsze sprawdza kod (NIP, sumy, EAN). Rachunek orientacyjny: ok. 1–3 gr za dokument (`docs/04_*`, rozdz. 4.3). *(v1.1 zakładało Gemini 2.5 Flash — nie odrzucamy go, ale bez zmierzonej dokładności nie wybieramy; `docs/09_AI_I_OCR.md`.)*
 
 ---
 
@@ -166,7 +167,7 @@ Koszt: Gemini 2.5 Flash 0,15/1,25 USD za mln tokenów (wej./wyj.) → strona fak
 
 - **Aplikacja:** Expo (React Native, TypeScript), EAS Build (buildy iOS/Android w chmurze, Mac niepotrzebny). Design: własne komponenty w stylu iOS, drobne adaptacje Android.
 - **Backend:** Supabase, region eu-central-1 (Frankfurt), jeden projekt multi-tenant: Postgres+RLS, Auth, Storage (prywatny), Realtime (czat, żywe listy), Edge Functions + kolejka (skany, KSeF, webhooki Stripe).
-- **Usługi:** Gemini Flash (OCR/parsowanie), bramka SMS (Sendly ~0,075 zł/SMS pay-as-you-go lub SMSAPI 49 zł/mc abonament), Stripe (karty 1,5%+1 zł EOG; BLIK 1,6%+1 zł; P24 1,9%+1 zł), Resend/Postmark (mail), Sentry (błędy).
+- **Usługi:** Claude (Haiku → Sonnet; odczyt faktur i asystent), bramka SMS (Sendly ~0,075 zł/SMS pay-as-you-go lub SMSAPI 49 zł/mc abonament), Stripe (karty 1,5%+1 zł EOG; BLIK 1,6%+1 zł; P24 1,9%+1 zł), Resend/Postmark (mail), Sentry (błędy).
 - **WWW:** landing + cennik + rejestracja + panel właściciela (billing) — Cloudflare Pages/Vercel + Stripe Checkout.
 - **Offline (Etap 1.5):** PowerSync (SQLite lokalnie, synchronizacja dwukierunkowa). Warunki spełnione od dnia 1: UUID klienckie + append-only log ruchów.
 
@@ -176,6 +177,7 @@ Koszt: Gemini 2.5 Flash 0,15/1,25 USD za mln tokenów (wej./wyj.) → strona fak
 
 - **Model "Netflixa":** subskrypcje sprzedajemy na www (Stripe Checkout), aplikacja tylko loguje. W aplikacji: zablokowane funkcje pokazujemy bez ceny i bez linku ("dostępne w wyższym planie"). Maile z rejestracji w aplikacji nie promują zakupu poza sklepem; maile z rejestracji na www — mogą.
 - Podstawa: Apple 3.1.3(c) Enterprise Services (sprzedaż wyłącznie organizacjom → można poza IAP; sprzedaż konsumencka musiałaby przez IAP — dlatego Solo darmowe, rejestracja zawsze jako firma). Google lustrzanie (zmiany po Epic dotyczą tylko USA). UE po DMA: linki zewnętrzne możliwe na warunkach Apple — nie opieramy na tym modelu, weryfikacja przy submisji. **Plan B** przy odrzuceniu: dodać IAP (15% w Small Business Program) obok tańszej ceny www.
+- **Uwaga v1.2 (tekst wytycznej odczytany z developer.apple.com):** 3.1.3(c) dopuszcza sprzedaż poza IAP, gdy aplikacja jest „sprzedawana bezpośrednio organizacjom lub grupom dla ich pracowników”, ale **„sprzedaż konsumencka, jednoosobowa lub rodzinna musi używać zakupów w aplikacji”**. Plan Start dla jednoosobowej firmy bywa tak odczytywany — to realne ryzyko. Ponadto aplikacje z tej sekcji **nie mogą w aplikacji zachęcać do płatności poza IAP** (poza USA): w wersji iOS nie pokazujemy cen ani odesłań do strony płatności.
 - **Lejek:** reklama/treści → www (cennik + rejestracja) → pobranie aplikacji. Panel właściciela na www (faktury!) jako naturalne miejsce cennika.
 - **Konta:** Apple Developer 99 USD/rok. Google Play jako **organizacja** → wymagany **D-U-N-S**: sprawdź w wyszukiwarce D&B; jeśli brak (JDG nie są widoczne w wyszukiwarce) — bezpłatny formularz na dnb.com/pl-pl, nadanie ~5 dni roboczych wg PL oddziału (Google każe planować do 30 dni). Dane konta = dane w D&B co do znaku. **Wniosek w 1. tygodniu projektu.**
 
@@ -261,10 +263,43 @@ Realistycznie: **14–16 tygodni** do publicznej wersji dla jednej sprawnej osob
 3. **Stabilność API KSeF 2.0** — system świeży; monitorować komunikaty MF, obsłużyć opóźnienia/awarie po ich stronie.
 4. **Ceny leadów Etapu 2 (299/699 zł, 1–3%)** — hipotezy do walidacji na pierwszych 10 dostawcach.
 5. **Koszt SMS przy nadużyciach** — rate limiting + monitoring od dnia 1.
-6. **Nazwa aplikacji** — "Tapventory" traktujemy jako nazwę roboczą; właściciel projektu planuje nazwę docelową (do podania). Po ustaleniu: sprawdzenie domen (.pl/.com), znaku towarowego (UPRP/EUIPO) i kolizji nazw w App Store / Google Play — przed publikacją.
+6. **Nazwa aplikacji** — "Tapventory" traktujemy jako nazwę roboczą; domena `tapventory.com` kupiona, identyfikatory `com.tapventory.app`. Przed publikacją: znak towarowy (UPRP/EUIPO) i kolizje nazw w App Store / Google Play.
+7. **Konkurencja w „KSeF → magazyn”** (v1.2): pakiety księgowe mogą dodać mobilne wyjście towaru; obrona: tempo, prostota, neutralność wobec programu do faktur.
+8. **Zgodność z żywym KSeF i jakość AI niezmierzone** (v1.2): kod przetestowano na symulatorze KSeF i atrapie modelu; potrzebny jest przebieg na żywo i `npm run eval:run` (`docs/05_*`, rozdz. 4).
+9. **Limity KSeF** (v1.2): 64 pobrania faktur/h i ograniczenia per IP — duży wolumen wymaga eksportu paczek i stałego adresu wychodzącego.
+10. **Brak 2FA, Stripe, www, offline, monitoringu** (v1.2): patrz rozdz. 19 i `docs/01_KOLEJKA_BUDOWY.md`.
 
 ---
 
 ## 18. Słownik
 
 **tenant_id** — identyfikator firmy w wielofirmowej bazie ("numer piętra w biurowcu"). **RLS** — reguły w samej bazie: firma widzi tylko swoje wiersze. **UUID v7** — losowy identyfikator generowany na telefonie (warunek offline), sortowalny po czasie. **TOTP** — kody jednorazowe z aplikacji (Google Authenticator), darmowe, odporne na podmianę SIM. **scaffold** — szkielet kodu z szablonu bez logiki produktu. **KSeF** — państwowy system, przez który przechodzą faktury B2B w Polsce. **FA(3)** — struktura XML polskiej e-faktury. **EN 16931** — europejska norma semantyki e-faktury. **Peppol** — europejska sieć wymiany e-dokumentów. **RFQ** — zapytanie ofertowe. **IAP** — zakupy w aplikacji (prowizja Apple/Google 15–30%). **PITR** — odtwarzanie bazy do dowolnej sekundy. **Edge Function** — mała funkcja uruchamiana na serwerze (klucze API nigdy na telefonie). **Append-only** — tabela, do której się tylko dopisuje. **D-U-N-S** — światowy 9-cyfrowy identyfikator firmy (Dun & Bradstreet), wymagany do konta organizacji Google Play.
+
+---
+
+## 19. Stan realizacji (9.10.2026)
+
+Legenda: ✅ zbudowane i przetestowane · ◐ częściowo · ❌ nie zrobione. „Przetestowane” = testy automatyczne (baza na PostgreSQL 16/17, funkcje, interfejs w Chromium na makiecie); **nic nie zostało sprawdzone na żywych usługach ani na telefonach** (`docs/05_RAPORT_WERYFIKACJI.md`).
+
+| Rozdział koncepcji | Stan | Uwagi |
+|---|:-:|---|
+| 3. „Zdejmij”, mini‑spisy, zgłoszenie jako punkt kontrolny | ✅ | atrybucja ruchów do kont; pytanie przy „Zdejmij” i rotacyjne mini‑spisy (częstotliwość w Ustawieniach) |
+| 4. Konta, firmy, zaproszenia (kod), role, flagi | ✅ | zaproszenia kodem, nie mailem; panel www właściciela ❌ |
+| 4. Katalog, EAN, „Zdejmij”, progi, push | ✅/◐ | push natywny: kod jest, Android wymaga Firebase; Web Push ❌ |
+| 4. Zgłoszenia ze statusami i czatem (Realtime) | ✅ | + „ja też tego potrzebuję” |
+| 4. Projekty/zlecenia | ◐ | encje i przypisywanie są; raport „koszt materiałów na zlecenie” ❌ |
+| 4. Eksport CSV, ekran dziennika zdarzeń | ❌ | `audit_log` zapisuje, brak widoku |
+| 4. RODO: eksport danych | ❌ | usunięcie konta/firmy ✅ |
+| 4. Asystent AI (pomocowy) | ✅ | pytania o dane firmy (1.5) ❌ |
+| 5. Model danych, RLS | ✅ | 14 migracji |
+| 6. Role i uprawnienia | ✅ | procedura administracyjna zmiany właściciela — poza aplikacją |
+| 7. 2FA SMS/TOTP, kody zapasowe, alerty nowego urządzenia, captcha | ❌ | zaplanowane |
+| 8.1 KSeF (token, pobieranie, parser FA) | ✅ symulowane | **żywa weryfikacja do zrobienia** |
+| 8.2 Peppol / EN 16931 (DE, BE, FR) | ❌ | architektura `EInvoiceProvider` jeszcze bez adapterów |
+| 9. Foto/AI: skaner, kolejka, ekran weryfikacji, księgowanie, storno, aliasy | ✅ | grupowanie stron ręczne; odczyt Claude z kontrolą kodem; pomiar jakości (`ai_correction_report`) |
+| 10. Aplikacja (Expo iOS/Android/PWA), Supabase | ✅ | budowa natywna i wdrożenie na żywo ❌ niesprawdzone |
+| 11. Sklepy, model „Netflixa”, plan B IAP | ◐ | listy kontrolne i zgoda AI ✅; konta sklepów i recenzja ❌ |
+| 12. Plany, limity, próba 14 dni | ✅ | płatności (Stripe) ❌ — plan zmienia się ręcznie (`docs/02_*`, rozdz. 9) |
+| 13. Program poleceń | ◐ | tabele i kody w bazie; przepływ www + Stripe ❌ |
+| 14. Marketplace B2B (Etap 2) | ❌ | furtki w modelu danych zostawione |
+| Etap 1.5: offline (PowerSync) | ❌ | architektura gotowa (UUID klienckie, księga ruchów) |

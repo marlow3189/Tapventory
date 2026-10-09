@@ -140,3 +140,24 @@ Zasady:
 * Migracje wgrywasz do każdego projektu tym samym poleceniem `db push` po wskazaniu go przez `npx supabase link --project-ref …` (przełączanie między projektami = kolejny `link`).
 * Każdy projekt ma **własne** sekrety funkcji (`secrets set` po `link`). Nie używaj tego samego `KSEF_TOKEN_KEY` w dev i prod.
 * Przed pierwszym klientem na PROD: plan Pro, PITR, „Confirm email” włączone, limity wydatków u dostawcy AI, kopie kluczy w menedżerze haseł, test odtwarzania kopii.
+* **Własny serwer poczty (SMTP)** dla test i prod (np. Resend lub Postmark; panel Authentication → SMTP): domyślny serwer Supabase jest tylko do prób, ma niskie limity wysyłki i bywa ograniczony do adresów członków zespołu 🟡 — bez własnego SMTP zaproszeni testerzy mogą nie dostać maila z potwierdzeniem.
+
+## 9. Ręczne operacje administracyjne (do czasu płatności i panelu na www)
+
+Plan firmy zmienia dziś administrator ręcznie. Panel Supabase → **SQL Editor** (działasz jako administrator projektu), wklej i kliknij **Run**:
+
+```sql
+-- 1) znajdź firmę
+select id, name, plan, trial_ends_at, created_at from public.tenants order by created_at desc;
+
+-- 2) zmień plan (solo | start | team) — wstaw prawdziwy identyfikator w miejsce UUID_FIRMY
+select public.set_tenant_plan('UUID_FIRMY', 'start');
+
+-- 3) przedłuż okres próbny o 14 dni (w próbie obowiązują limity planu Zespół)
+select public.set_tenant_plan('UUID_FIRMY', (select plan from public.tenants where id = 'UUID_FIRMY'), now() + interval '14 days');
+
+-- 4) ile skanów AI zużyła firma w tym miesiącu
+select count(*) as skany from public.ai_usage where tenant_id = 'UUID_FIRMY' and kind = 'document' and created_at >= date_trunc('month', now());
+```
+
+Funkcje `set_tenant_plan` i spółka są **dostępne tylko dla administratora i backendu** — aplikacja (zalogowany użytkownik) nie ma do nich dostępu (test `01_invariants`). Nie edytuj tabel ręcznie przez „Table Editor”, jeśli istnieje funkcja robiąca to samo — funkcje pilnują spójności.

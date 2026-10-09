@@ -62,6 +62,7 @@ Wspólna lekcja: **w Postgresie `EXECUTE` na funkcjach jest domyślnie nadane ws
 | G8 | skrypty `fn:typecheck` i `eval:typecheck` używały ścieżki z ukośnikami (`mobile/node_modules/.bin/tsc`), co **w `cmd.exe` Windows się wywala** | przegląd pod kątem Windows | `node mobile/node_modules/typescript/bin/tsc …` |
 | G9 | nieudana migracja w teście **zawieszała proces** i zostawiała śmieciową bazę `tv_test_*` | uruchomienie nowego testu z błędem w migracji | `createTestDb` sprząta po sobie przy błędzie |
 | G10 | komunikat o „nieaktywnym” tokenie KSeF kazał generować nowy, choć świeży token aktywuje się po chwili | lektura OpenAPI (token ma status *Pending* → *Active*) | komunikat radzi odczekać minutę |
+| G12 | pakiety `barcode-detector` i `zxing-wasm` były **zależnościami przechodnimi** (`expo-camera`), a kod skanera w przeglądarce i skrypt `copy-wasm` używały ich bezpośrednio | przegląd importów | zadeklarowane jawnie w `mobile/package.json` (`3.2.2` i `3.1.3`, ta sama wersja co wcześniej) |
 | G11 | Supabase CLI nie było zależnością projektu — `npx supabase` pytałoby o instalację przy każdym uruchomieniu i mogło się różnić wersją | przegląd instrukcji dla juniora | `supabase@2.120.0` w `devDependencies` (config sprawdzony tą wersją) |
 
 ## 4. Ryzyka, których NIE usunąłem (jawna lista)
@@ -77,7 +78,7 @@ Wspólna lekcja: **w Postgresie `EXECUTE` na funkcjach jest domyślnie nadane ws
 | R7 | **Stripe, strona www, panel płatności** — niezbudowane (plan zmienia się dziś ręcznie, funkcją `set_tenant_plan`) | `docs/01_KOLEJKA_BUDOWY.md` |
 | R8 | **Tryb offline** (zapisy bez internetu) — niezbudowany; PWA ma tylko szkielet offline | koncepcja 1.5 (PowerSync) |
 | R9 | **Brak monitoringu błędów** (Sentry itp.) i brak alertów kosztowych | dodać przed płatnymi klientami |
-| R10 | **Pakiety `barcode-detector`/`zxing-wasm` są zależnościami przechodnimi** (`expo-camera`); skrypt `copy-wasm` i kod ich używają bezpośrednio | gdyby `npm install` przestał je wystawiać — dodaj je jawnie do `mobile/package.json` (patrz rozdz. 6) |
+| R10 | **`npm audit` (aplikacja, zależności produkcyjne): 25 ostrzeżeń — 14 wysokich, 0 krytycznych** (stan 9.10.2026). Prawie wszystkie dotyczą **narzędzi budowania** Expo/Metro (`braces`, `micromatch`, `node-forge` w narzędziach podpisywania, `xcode`, `uuid`), które nie trafiają do aplikacji; jedno dotyczy działania aplikacji: `decode-uri-component` przez `expo-router` (atak DoS przez złośliwy adres) — niskie ryzyko | **nie uruchamiaj `npm audit fix --force`** — proponuje cofnięcie do Expo 44; zamiast tego aktualizuj SDK Expo (`npx expo install --fix`) i sprawdzaj audyt przy każdej aktualizacji |
 | R11 | **Ceny i reguły sklepów** z badania (rozdz. 5 w `04_*`) — część 🟡/❓ | sprawdzić przed publikacją |
 | R12 | **Wydajność** pod obciążeniem — nie mierzona | test na projekcie Pro z kilkoma firmami |
 | R13 | Prawo: szablony `docs/prawne/` nie są opinią prawną | przegląd przez prawnika przed publikacją |
@@ -85,6 +86,7 @@ Wspólna lekcja: **w Postgresie `EXECUTE` na funkcjach jest domyślnie nadane ws
 ## 5. Co nowego zostało dodane względem paczki (przegląd)
 
 * **Baza:** 12 nowych migracji (`0003…0014`): zabezpieczenia, cykl zgłoszeń, faktury z księgowaniem/storno/aliasami, plany i limity, mini‑spisy, powiadomienia, głosy, limity plików, potok AI, KSeF, zgodność z PG17, pętla zwrotna jakości.
+* **Szkielet aplikacji z paczki (`app-src/`, 17 plików: logowanie, rejestracja, jeden ekran firmy, kilka komponentów iOS) został zastąpiony projektem `mobile/` i usunięty z drzewa** — pozostaje w historii Gita (commit `69bd90e`, „Import: Krok 1 — fundament”). Paczkę z `app-src` trzeba było i tak wgrywać w projekt wygenerowany kreatorem Expo (ryzykowny, ręczny krok z dawnej instrukcji); `mobile/` jest kompletnym, sprawdzonym projektem.
 * **Aplikacja `mobile/`** (Expo SDK 57; iOS, Android, PWA): logowanie i rejestracja, wybór „zakładam firmę / mam kod”, **styl Instagrama** (stories z zadaniami, feed zgłoszeń z sercem i komentarzami, siatka magazynu, arkusz „＋”), „Zdejmij” w 2 dotknięcia i przez skaner EAN, zgłoszenia ze statusami i czatem, mini‑spisy, faktury (skan, ekran weryfikacji, księgowanie/storno), zespół i zaproszenia kodem, ustawienia (plan, spisy, zlecenia, zgoda na AI, usunięcie konta/firmy), asystent AI, ekran KSeF, ciemny tryb, PWA.
 * **Funkcje serwerowe:** `process-document`, `assistant`, `barcode-lookup`, `ksef-connect`, `ksef-sync`, `send-push`, `cron-tasks`.
 * **Zestaw ewaluacyjny AI**, **CI**, **dokumentacja** (ten katalog).

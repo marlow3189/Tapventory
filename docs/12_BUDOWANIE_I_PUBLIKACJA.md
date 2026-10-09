@@ -186,7 +186,7 @@ Dane faktycznie przetwarzane przez aplikację (stan kodu na 9.10.2026 — **zwer
 | Kontakty, kalendarz, zdrowie, finanse osobiste | **nie** | — | — | — |
 | Analityka, reklamy, śledzenie (ATT) | **nie** (brak SDK) | — | — | — |
 
-Pozostałe odpowiedzi: dane szyfrowane w tranzycie (HTTPS) — tak; użytkownik może zażądać usunięcia — tak (w aplikacji: Ustawienia → Usuń konto; na stronie: `/usun-konto`).
+Pozostałe odpowiedzi: dane szyfrowane w tranzycie (HTTPS) — tak; użytkownik może zażądać usunięcia — tak (w aplikacji: Ustawienia → **Usuń moje konto**; na stronie: `/usun-konto`).
 Wymóg Apple 5.1.2(i) (ujawnienie i zgoda na przekazanie danych zewnętrznej AI) spełnia arkusz zgody przed pierwszym skanem i asystentem.
 
 ### 5.3 Konto testowe dla recenzenta (Apple i Google tego wymagają przy aplikacjach z logowaniem)
