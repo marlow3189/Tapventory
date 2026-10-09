@@ -15,7 +15,7 @@ Jedna aplikacja na **iPhone’a, Androida i przeglądarkę (PWA)**, w stylu Inst
 * **Zgłoszenia braków** jak posty: zdjęcie, ilość, statusy (zgłoszone → zaakceptowane → zamówione → dostarczone → przyjęte), czat w wątku, serce „ja też tego potrzebuję”.
 * **Faktury zakupu:** ze zdjęcia/PDF czyta je **AI (Claude)**, a **kod sprawdza** sumy i NIP; z państwowego **KSeF** wpadają same. Człowiek zatwierdza, nic nie księguje się automatycznie; błąd cofa „storno”.
 * **Mini‑spisy** zamiast wielkiej inwentaryzacji, role (właściciel / kierownik / pracownik), plany i limity, zgoda na AI, usuwanie konta, asystent „jak to zrobić”, **eksport CSV** (stany, ruchy, faktury) do polskiego Excela.
-* **Bezpieczeństwo w bazie:** izolacja danych firm wymuszona regułami RLS, 117 testów na prawdziwym PostgreSQL 16 i 17.
+* **Bezpieczeństwo w bazie:** izolacja danych firm wymuszona regułami RLS, 118 testów na prawdziwym PostgreSQL 16 i 17.
 
 ## Status (9.10.2026) — uczciwie
 
@@ -76,7 +76,7 @@ supabase/
   seed.sql             dane przykładowe — tylko lokalnie
 eval/                  zestaw ewaluacyjny odczytu faktur (28 syntetycznych dokumentów)
 docs/                  dokumentacja (powyżej), szablony prawne, zrzuty ekranów
-.github/workflows/     CI (baza, funkcje, Deno, aplikacja, interfejs)
+.github/workflows/     CI (baza, kontrakt, funkcje, Deno, aplikacja, interfejs)
 ```
 
 ## Zasady, których pilnujemy

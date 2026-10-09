@@ -95,7 +95,7 @@ Zmienne `EXPO_PUBLIC_…` są **wklejane do aplikacji przy budowaniu**, więc zm
 `npm run db:test` potrzebuje działającego PostgreSQL (z rozszerzeniami standardowymi — `pg_trgm`) i uprawnień superużytkownika; każdy plik testowy tworzy własną, tymczasową bazę `tv_test_…` i usuwa ją na koniec.
 Trzy drogi:
 
-1. **GitHub Actions (bez instalowania czegokolwiek):** wypchnij gałąź na GitHub → zakładka **Actions** → zielony krzyżyk przy zadaniu „Baza” = 117+ testów bazy przeszło na PostgreSQL 17.
+1. **GitHub Actions (bez instalowania czegokolwiek):** wypchnij gałąź na GitHub → zakładka **Actions** → zielony krzyżyk przy zadaniu „Baza” = wszystkie testy bazy (118 w chwili pisania) przeszły na PostgreSQL 17.
 2. **Lokalny Supabase** (rozdz. 3): domyślny adres testów to właśnie jego baza (`postgres://postgres:postgres@127.0.0.1:54322/postgres`), więc wystarczy `npm run db:test`.
 3. **PostgreSQL zainstalowany w Windows** (instalator od EDB, wersja 16 lub 17; zapamiętaj hasło użytkownika `postgres`):
 

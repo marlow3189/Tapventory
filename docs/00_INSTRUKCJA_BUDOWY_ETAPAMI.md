@@ -91,7 +91,7 @@ Jak korzystać z tego dokumentu:
    npm test
    ```
 
-> ✅ **CHECKPOINT 1:** `npm test` kończy się linijkami w stylu `Tests: 61 passed` (liczba może być nieco inna po kolejnych zmianach), bez `failed`.
+> ✅ **CHECKPOINT 1:** `npm test` kończy się linijkami w stylu `Tests: 78 passed` (liczba może być nieco inna po kolejnych zmianach), bez `failed`.
 
 ---
 

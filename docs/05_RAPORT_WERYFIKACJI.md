@@ -7,15 +7,15 @@ Zasada raportu: **każde twierdzenie ma dowód albo etykietę „niesprawdzone�
 
 | Obszar | Jak sprawdzone | Wynik |
 |---|---|---|
-| Baza danych — migracje `0001…0014` | skrypt `createTestDb()` buduje świeżą bazę z plików `supabase/migrations` + `seed.sql` (to samo, co `supabase db reset`) i uruchamia **117 testów** na prawdziwym PostgreSQL **16.15 i 17.5** | ✅ 117/117 na obu |
+| Baza danych — migracje `0001…0015` | skrypt `createTestDb()` buduje świeżą bazę z plików `supabase/migrations` + `seed.sql` (to samo, co `supabase db reset`) i uruchamia **118 testów** na prawdziwym PostgreSQL **16.15 i 17.5** | ✅ 118/118 na obu |
 | Bezpieczeństwo (RLS, role, uprawnienia funkcji i tabel) | testy regresji **F1–F10**, test inwariantów (lista funkcji dostępnych dla zalogowanych, macierz uprawnień do tabel, tabele „tylko backend”) | ✅ |
 | **Kontrakt aplikacja ↔ baza** (`npm run api:contract`) | kompilator TypeScript wyciąga z kodu aplikacji każde `supabase.from(…)` i `rpc(…)` i porównuje z prawdziwym schematem: nazwy tabel/kolumn/funkcji/argumentów, uprawnienia roli `authenticated`, cele `upsert`, klucze obce zagnieżdżeń; sprawdzacz ma własne testy z celowo błędnym kodem | ✅ 0 niezgodności w ~45 łańcuchach `from` i 20 wywołaniach `rpc` (1 zapytanie niezweryfikowane statycznie — sprawdzone ręcznie) |
 | Edge Functions (siedem) | **154 testy** w Node z wstrzykiwanymi atrapami; te same testy pod **Deno 2.9.6**; `deno check` wszystkich siedmiu `index.ts`; start serwera i odrzucenie żądania bez logowania (401) | ✅ |
 | KSeF | symulator serwera MF z **prawdziwym odszyfrowaniem RSA‑OAEP**; test end‑to‑end przez prawdziwy PostgreSQL | ✅ symulowany · ❌ **brak rozmowy z prawdziwym KSeF** |
 | Zestaw ewaluacyjny `eval/` | 14 testów, tryb próbny (atrapa) daje 100% przy zerowym szumie = spójność wzorca | ✅ · ❌ **brak liczb z prawdziwych modeli** |
-| Aplikacja — typy, lint, testy jednostkowe | `tsc --noEmit`, `expo lint`, Jest | patrz rozdz. 6 (wyniki końcowego przebiegu) |
-| Aplikacja — pakiety web / Android / iOS | `expo export` dla trzech platform (to robi też CI) | patrz rozdz. 6 |
-| Aplikacja — interfejs | test dymny w prawdziwym **Chromium**: 8 ścieżek, ~40 zrzutów ekranu obejrzanych wzrokowo, brak błędów w konsoli — na **makiecie backendu** | ✅ (makieta) |
+| Aplikacja — typy, lint, testy jednostkowe | `tsc --noEmit`, `expo lint`, Jest | ✅ bez błędów typów, bez ostrzeżeń lintera, **78/78** testów Jest |
+| Aplikacja — pakiety web / Android / iOS | `expo export` dla trzech platform (to robi też CI) | ✅ wszystkie trzy się pakują (Android i iOS do bajtkodu Hermes) |
+| Aplikacja — interfejs | test dymny w prawdziwym **Chromium**: 44 kroki w 8 ścieżkach, 41 zrzutów ekranu, brak błędów w konsoli — na **makiecie backendu** (10 zrzutów obejrzanych wzrokowo i dołączonych do dokumentacji) | ✅ (makieta) |
 | Budowa natywna iOS/Android, push na urządzeniu, sklepy | — | ❌ **niesprawdzone** (brak kont, Maca i dostępu do expo.dev) |
 | Wdrożenie funkcji i migracji na żywy Supabase | — | ❌ **niesprawdzone**; `config.toml` sprawdzony parserem CLI 2.120 (`supabase status` kończy się błędem o Dockerze, nie o konfiguracji) |
 | Workflow CI (GitHub Actions) | poprawny YAML | ❌ **nigdy nie uruchomiony** |
@@ -63,9 +63,10 @@ Wspólna lekcja: **w Postgresie `EXECUTE` na funkcjach jest domyślnie nadane ws
 | G8 | skrypty `fn:typecheck` i `eval:typecheck` używały ścieżki z ukośnikami (`mobile/node_modules/.bin/tsc`), co **w `cmd.exe` Windows się wywala** | przegląd pod kątem Windows | `node mobile/node_modules/typescript/bin/tsc …` |
 | G9 | nieudana migracja w teście **zawieszała proces** i zostawiała śmieciową bazę `tv_test_*` | uruchomienie nowego testu z błędem w migracji | `createTestDb` sprząta po sobie przy błędzie |
 | G10 | komunikat o „nieaktywnym” tokenie KSeF kazał generować nowy, choć świeży token aktywuje się po chwili | lektura OpenAPI (token ma status *Pending* → *Active*) | komunikat radzi odczekać minutę |
-| G13 | **własny błąd z tej wersji:** migawka `ai_extraction` (0014) trafiałaby do dziennika zdarzeń przy **każdej** edycji dokumentu (trigger `log_audit` kopiuje cały wiersz) — dziennik puchłby wielokrotnie | przegląd skutków ubocznych własnej migracji; test czerwony na `0014`, zielony po `0015` | migracja `0015`: `log_audit` wycina `ai_extraction` |
-| G12 | pakiety `barcode-detector` i `zxing-wasm` były **zależnościami przechodnimi** (`expo-camera`), a kod skanera w przeglądarce i skrypt `copy-wasm` używały ich bezpośrednio | przegląd importów | zadeklarowane jawnie w `mobile/package.json` (`3.2.2` i `3.1.3`, ta sama wersja co wcześniej) |
 | G11 | Supabase CLI nie było zależnością projektu — `npx supabase` pytałoby o instalację przy każdym uruchomieniu i mogło się różnić wersją | przegląd instrukcji dla juniora | `supabase@2.120.0` w `devDependencies` (config sprawdzony tą wersją) |
+| G12 | pakiety `barcode-detector` i `zxing-wasm` były **zależnościami przechodnimi** (`expo-camera`), a kod skanera w przeglądarce i skrypt `copy-wasm` używały ich bezpośrednio | przegląd importów | zadeklarowane jawnie w `mobile/package.json` (`3.2.2` i `3.1.3`, ta sama wersja co wcześniej) |
+| G13 | **własny błąd z tej wersji:** migawka `ai_extraction` (0014) trafiałaby do dziennika zdarzeń przy **każdej** edycji dokumentu (trigger `log_audit` kopiuje cały wiersz) — dziennik puchłby wielokrotnie | przegląd skutków ubocznych własnej migracji; test czerwony na `0014`, zielony po `0015` | migracja `0015`: `log_audit` wycina `ai_extraction` |
+| G14 | **brak kontroli zgodności aplikacji z bazą:** literówka w nazwie kolumny, brak uprawnienia roli `authenticated`, zły cel `upsert` czy zła funkcja `rpc` wychodziłyby dopiero na telefonie (testy bazy i Jest tego nie łączą) | przegląd luk w testach | `npm run api:contract` (+ zadanie `kontrakt` w CI): kompilator TypeScript wyciąga zapytania z kodu i porównuje je z prawdziwym schematem |
 
 ## 4. Ryzyka, których NIE usunąłem (jawna lista)
 
@@ -87,7 +88,7 @@ Wspólna lekcja: **w Postgresie `EXECUTE` na funkcjach jest domyślnie nadane ws
 
 ## 5. Co nowego zostało dodane względem paczki (przegląd)
 
-* **Baza:** 12 nowych migracji (`0003…0014`): zabezpieczenia, cykl zgłoszeń, faktury z księgowaniem/storno/aliasami, plany i limity, mini‑spisy, powiadomienia, głosy, limity plików, potok AI, KSeF, zgodność z PG17, pętla zwrotna jakości.
+* **Baza:** 13 nowych migracji (`0003…0015`): zabezpieczenia, cykl zgłoszeń, faktury z księgowaniem/storno/aliasami, plany i limity, mini‑spisy, powiadomienia, głosy, limity plików, potok AI, KSeF, zgodność z PG17, uszanowanie `Retry-After` z KSeF, pętla zwrotna jakości i dziennik zdarzeń bez migawki odczytu.
 * **Szkielet aplikacji z paczki (`app-src/`, 17 plików: logowanie, rejestracja, jeden ekran firmy, kilka komponentów iOS) został zastąpiony projektem `mobile/` i usunięty z drzewa** — pozostaje w historii Gita (commit `69bd90e`, „Import: Krok 1 — fundament”). Paczkę z `app-src` trzeba było i tak wgrywać w projekt wygenerowany kreatorem Expo (ryzykowny, ręczny krok z dawnej instrukcji); `mobile/` jest kompletnym, sprawdzonym projektem.
 * **Aplikacja `mobile/`** (Expo SDK 57; iOS, Android, PWA): logowanie i rejestracja, wybór „zakładam firmę / mam kod”, **styl Instagrama** (stories z zadaniami, feed zgłoszeń z sercem i komentarzami, siatka magazynu, arkusz „＋”), „Zdejmij” w 2 dotknięcia i przez skaner EAN, zgłoszenia ze statusami i czatem, mini‑spisy, faktury (skan, ekran weryfikacji, księgowanie/storno), zespół i zaproszenia kodem, ustawienia (plan, spisy, zlecenia, zgoda na AI, usunięcie konta/firmy), asystent AI, ekran KSeF, **eksport CSV** (stany, ruchy, faktury), ciemny tryb, PWA.
 * **Funkcje serwerowe:** `process-document`, `assistant`, `barcode-lookup`, `ksef-connect`, `ksef-sync`, `send-push`, `cron-tasks`.
@@ -95,6 +96,30 @@ Wspólna lekcja: **w Postgresie `EXECUTE` na funkcjach jest domyślnie nadane ws
 
 ## 6. Wyniki końcowego przebiegu weryfikacji
 
-*(uzupełnione po ostatnim uruchomieniu wszystkich sprawdzeń — patrz `docs/06_TESTY_I_JAKOSC.md` z listą poleceń)*
+Przebieg z **9 października 2026** na kodzie z commitu `b8a39d2` (od tamtej pory zmieniała się już tylko dokumentacja). Środowisko: kontener Linux, Node 22.22, PostgreSQL 16.15 (Ubuntu) i 17.5, Deno 2.9.6, Chromium z Playwrighta. Polecenia są w `docs/06_TESTY_I_JAKOSC.md`, rozdz. 2 — możesz je powtórzyć u siebie.
 
-WYNIKI_KONCOWE_PLACEHOLDER
+| Sprawdzenie | Polecenie | Wynik |
+|---|---|---|
+| Testy bazy — PostgreSQL 16.15 | `npm run db:test` | ✅ **118 / 118** (≈ 5 s) |
+| Testy bazy — PostgreSQL 17.5 | `npm run db:test` | ✅ **118 / 118** (≈ 4 s) |
+| Po testach bazy | — | ✅ żadna baza `tv_test_*` nie została na serwerze (sprzątanie działa) |
+| Kontrakt aplikacja ↔ baza (PG 16 i 17) | `npm run api:contract` | ✅ 7 / 7 na obu · 45 łańcuchów `from`, 20 wywołań `rpc`, 4 `upsert`y · 0 niezgodności · 1 zapytanie nieweryfikowalne statycznie (`requests.ts:110`, `update` z dynamiczną treścią) — sprawdzone ręcznie: kolumny `status` i `supplier_id` istnieją, a `authenticated` ma na nich `UPDATE` |
+| Funkcje serwerowe — Node | `npm run fn:test` | ✅ **154 / 154** |
+| Funkcje serwerowe — Deno 2.9.6 | `npm run fn:deno-test` | ✅ **154 / 154** |
+| Typy funkcji | `npm run fn:typecheck`, `npm run fn:deno-check` | ✅ bez błędów (`deno check`: siedem `index.ts`) |
+| Zestaw ewaluacyjny — testy i typy | `npm run eval:test`, `npm run eval:typecheck` | ✅ 14 / 14, bez błędów |
+| Zestaw ewaluacyjny — tryb próbny | `npm run eval:dry` | ✅ 112 przebiegów (28 dokumentów × 4 konfiguracje) · **to atrapa dostawcy, nie model — liczby nie opisują żadnego modelu** |
+| Aplikacja — typy | `npx tsc --noEmit` (w `mobile`) | ✅ bez błędów |
+| Aplikacja — lint | `npx expo lint` | ✅ bez ostrzeżeń |
+| Aplikacja — testy jednostkowe | `npx jest` | ✅ **78 / 78** (4 pliki) |
+| Pakiet web (PWA) | `npm run build:web` | ✅ `entry` 2,1 MB + `index` 45 KB |
+| Pakiet Android | `npx expo export --platform android` | ✅ bajtkod Hermes, 4,3 MB |
+| Pakiet iOS | `npx expo export --platform ios` | ✅ bajtkod Hermes, 4,0 MB |
+| Interfejs w Chromium (makieta backendu) | `node mobile/scripts/ui-smoke/run.mjs mobile/dist ui-smoke-out` | ✅ 44 kroki, 41 zrzutów, **0 błędów w konsoli i na ekranach**, 88 żądań do makiety |
+
+**Czego ten przebieg nie dowodzi** (to samo, co w rozdz. 1 i 4, powtórzone, żeby nikt nie pomylił „zielone” z „działa u klienta”):
+
+* Żaden test nie rozmawiał z **prawdziwym Supabase**, **KSeF**, **modelami Claude** ani sklepami — wszędzie są symulatory, atrapy albo lokalny PostgreSQL. Zachowanie PostgREST, logowania (GoTrue), Storage i Realtime sprawdza tylko kontrakt statyczny (`api:contract`) i baza, nie ich działanie.
+* **Workflow CI nigdy nie wystartował** na GitHubie (sprawdzony tylko jako YAML i przez uruchomienie tych samych poleceń lokalnie). Pierwsze uruchomienie może wymagać drobnych poprawek.
+* **Natywne budowy i telefony:** paczki Android/iOS tylko się pakują (`expo export`); nie powstał plik `.apk`/`.aab`/`.ipa`, nie sprawdzono kamery, skanera, powiadomień push ani udostępniania pliku CSV na prawdziwym urządzeniu.
+* **Jakość odczytu faktur** na prawdziwych dokumentach nie jest zmierzona (`docs/09_*`, rozdz. 6–7).

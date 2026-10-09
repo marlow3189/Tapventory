@@ -18,7 +18,7 @@ Polecenia uruchamiasz w **folderze głównym** (`C:\projekty\tapventory`), chyba
 
 | Polecenie | Co sprawdza | Czas | Wymaga |
 |---|---|---|---|
-| `npm run db:test` | **testy bazy**: migracje 0001…0015, RLS, role, funkcje, KSeF end‑to‑end, pętla zwrotna AI (117 testów) | kilka sekund | działający PostgreSQL (rozdz. 3) |
+| `npm run db:test` | **testy bazy**: migracje 0001…0015, RLS, role, funkcje, KSeF end‑to‑end, pętla zwrotna AI (118 testów) | kilka sekund | działający PostgreSQL (rozdz. 3) |
 | `npm run api:contract` | **kontrakt aplikacja ↔ baza**: czyta kod aplikacji kompilatorem TypeScript, wyciąga każde `supabase.from(…)` i `supabase.rpc(…)` i sprawdza je z prawdziwym schematem (tabele, kolumny, uprawnienia, argumenty funkcji, klucze obce, cele `upsert`); ma własne testy z celowo błędnym kodem | ~5 s | PostgreSQL jak dla `db:test` + `npm install` w `mobile` |
 | `npm run fn:test` | **funkcje serwerowe** w Node (154 testy): potok AI, KSeF (klient, parser, synchronizacja), asystent, push, harmonogram | ~10 s | tylko Node |
 | `npm run fn:typecheck` | typy TypeScript funkcji | ~15 s | `mobile` po `npm install` |
@@ -28,7 +28,7 @@ Polecenia uruchamiasz w **folderze głównym** (`C:\projekty\tapventory`), chyba
 | `npm run eval:typecheck` | typy zestawu `eval/` | kilka sekund | |
 | `npm run eval:dry` | rura odczytu na **atrapie** (bez kluczy i kosztów) | ~10 s | po `npm run eval:generate` |
 | `npm run eval:run` | prawdziwy pomiar modeli (**kosztuje 1–3 USD**) | minuty | klucz Anthropic |
-| `cd mobile` → `npm test` | testy jednostkowe aplikacji (Jest, 61 testów) | ~2 s | |
+| `cd mobile` → `npm test` | testy jednostkowe aplikacji (Jest, 78 testów) | ~2 s | |
 | `cd mobile` → `npm run typecheck` | typy TypeScript aplikacji | ~30 s | |
 | `cd mobile` → `npm run lint` | ESLint (Expo) | ~30 s | |
 | `cd mobile` → `npx expo export --platform web` (i `android`, `ios`) | pakowanie aplikacji dla trzech platform bez budowania natywnego — łapie błędne importy i brakujące zasoby | ~1–2 min każde | |
