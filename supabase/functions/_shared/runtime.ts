@@ -8,6 +8,7 @@ import { HttpError } from './http.ts';
 import { AnthropicExtractor, type AnthropicLike } from './providers/anthropic.ts';
 import { AnthropicChat } from './providers/anthropic-chat.ts';
 import type { Effort } from './provider.ts';
+import { resolveServiceKey } from './service-key.ts';
 import { ReserveError, type ProcessDeps } from '../process-document/handler.ts';
 import type { AssistantDeps } from '../assistant/handler.ts';
 import type { BarcodeDeps } from '../barcode-lookup/handler.ts';
@@ -28,7 +29,11 @@ export const env = (name: string, fallback?: string): string => {
 };
 
 export function adminClient() {
-  return createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), {
+  const serviceKey = resolveServiceKey((name) => Deno.env.get(name));
+  if (!serviceKey) {
+    throw new HttpError(500, 'not_configured', 'Brak klucza serwisowego Supabase (SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SECRET_KEYS / TV_SERVICE_KEY) — patrz supabase/functions/README.md.');
+  }
+  return createClient(env('SUPABASE_URL'), serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

@@ -33,6 +33,16 @@ npx supabase functions deploy
 
 `supabase functions deploy` (bez nazwy) wdraża wszystkie funkcje z tego katalogu, z ustawieniami z `supabase/config.toml` (sekcje `[functions.*]`).
 
+## Klucz serwisowy Supabase (nic nie ustawiasz — chyba że coś pójdzie nie tak)
+
+Funkcje potrzebują klucza „service role/secret", który omija RLS. Supabase wstrzykuje go **sam** — starsze projekty jako `SUPABASE_SERVICE_ROLE_KEY`, nowsze (klucze `sb_secret_…`) jako mapę JSON `SUPABASE_SECRET_KEYS`. Kod (`_shared/service-key.ts`, testy `tests/service-key.test.ts`) rozumie oba warianty. Gdyby po wdrożeniu funkcja odpowiadała `not_configured` i „Brak klucza serwisowego", ustaw własny sekret (nazwy z przedrostkiem `SUPABASE_` są zarezerwowane):
+
+```powershell
+npx supabase secrets set TV_SERVICE_KEY=<klucz secret / service_role z panelu: Project Settings → API Keys>
+```
+
+Tego klucza **nigdy** nie wklejasz do aplikacji (`mobile/.env`), do repozytorium ani na czat.
+
 ## Harmonogram (obowiązkowy dla push, strażnika faktur i automatu KSeF)
 
 `cron-tasks` musi być wołany **co minutę** metodą POST z nagłówkiem `x-cron-secret: <CRON_SECRET>`. Dwie drogi:
