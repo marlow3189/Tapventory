@@ -275,6 +275,47 @@ test('finish_ksef_sync: nowe faktury → powiadomienie „document_ready” dla 
   assert.equal(row.last_error, 'KSeF ograniczył tempo');
 });
 
+test('finish_ksef_sync (0013): Retry-After z KSeF wydłuża przerwę — także po błędzie bez postępu — do 2 godzin', async () => {
+  const T = await connected('K8b');
+  const claim = () => rpc(`select public.claim_ksef_sync($1, 'auto') as r`, [T.tenantId]).then((x) => x.r);
+  const reset = () => db.admin.query(`update public.ksef_integrations set last_attempt_at = null, next_attempt_at = null where tenant_id = $1`, [T.tenantId]);
+  const waitSec = async () => {
+    const row = (await db.admin.query(`select next_attempt_at from public.ksef_integrations where tenant_id = $1`, [T.tenantId])).rows[0];
+    return (new Date(row.next_attempt_at) - Date.now()) / 1000;
+  };
+  const near = (value, expected) => assert.ok(Math.abs(value - expected) <= 60, `oczekiwano ok. ${expected} s, jest ${Math.round(value)} s`);
+
+  // błąd bez postępu i Retry-After 50 min → przerwa ≥ 50 min (wykładnicze wycofanie dałoby tylko 5 min)
+  let c = await claim();
+  await rpc(`select public.finish_ksef_sync($1, 'error', 0,0,0,0,0, 'KSeF ograniczył tempo', null, false, 3000)`, [c.run_id]);
+  near(await waitSec(), 3000);
+
+  // częściowy przebieg: 50 minut, a nie ucięte do 30 (jak w 0011)
+  await reset();
+  c = await claim();
+  await rpc(`select public.finish_ksef_sync($1, 'partial', 10, 2, 0, 0, 1, 'KSeF ograniczył tempo', null, false, 3000)`, [c.run_id]);
+  near(await waitSec(), 3000);
+
+  // sufit: 2 godziny, choćby KSeF kazał czekać dłużej
+  await reset();
+  c = await claim();
+  await rpc(`select public.finish_ksef_sync($1, 'partial', 10, 2, 0, 0, 1, 'x', null, false, 90000)`, [c.run_id]);
+  near(await waitSec(), 7200);
+
+  // mały Retry-After nie skraca wykładniczego wycofania po błędzie (po sukcesie licznik był 0, ale poprzednie błędy trwają)
+  await reset();
+  c = await claim();
+  await rpc(`select public.finish_ksef_sync($1, 'error', 0,0,0,0,0, 'x', null, false, 30)`, [c.run_id]);
+  const sec = await waitSec();
+  assert.ok(sec >= 280 && sec <= 330, `5 minut (ostatni przebieg częściowy wyzerował licznik), jest ${Math.round(sec)} s`);
+
+  // błąd autoryzacji nadal wstrzymuje automat (brak next_attempt_at), niezależnie od Retry-After
+  await reset();
+  c = await claim();
+  await rpc(`select public.finish_ksef_sync($1, 'error', 0,0,0,0,0, 'Token odrzucony', null, true, 3000)`, [c.run_id]);
+  assert.equal((await db.admin.query(`select next_attempt_at from public.ksef_integrations where tenant_id = $1`, [T.tenantId])).rows[0].next_attempt_at, null);
+});
+
 test('due_ksef_tenants: tylko podłączone, niepracujące, bez wycofania i po odstępie 3 godzin', async () => {
   const A = await connected('Kd1');        // nigdy nie próbowano → należy się
   const B = await connected('Kd2');        // niedawno próbowano
